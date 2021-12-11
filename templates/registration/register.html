@@ -1,0 +1,120 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block title %}
+    Sign Up - Charlotte
+{% endblock %}
+
+{% block scriptHead %}
+    {% if user.is_authenticated %}
+        <script>
+            window.location.href = "/";
+        </script>
+    {% else %}
+        <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>Sign Up</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="errorMessage" class="alert alert-warning" role="alert" style="display: none">
+            </div>
+
+            <form id="registerForm">
+                {% csrf_token %}
+                <div class="mb-3 row">
+                    <label for="username" class="col-sm-2 col-form-label">Username: </label>
+                    <div class="col-auto">
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <span id="error-username" class="text-danger" role="alert" style="display: none">
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="password1" class="col-sm-2 col-form-label">Password: </label>
+                    <div class="col-auto">
+                        <input type="password" class="form-control" id="password1" name="password1" required>
+                        <span id="error-password1" class="text-danger" role="alert" style="display: none">
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="password2" class="col-sm-2 col-form-label">Repeat Password: </label>
+                    <div class="col-auto">
+                        <input type="password" class="form-control" id="password2" name="password2" required>
+                        <span id="error-password2" class="text-danger" role="alert" style="display: none">
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center">
+                    <input type="submit" value="Sign up" class="btn btn-primary">
+                    <a href="{% url 'interface:login' %}" class="text-decoration-none">Already have an account?</a>
+                </div>
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+
+            {#<p><a href="{% url 'password_reset' %}">Lost password?</a></p>#}
+        </div>
+    </div>
+
+    <div class="modal fade" id="primaryModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+         aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Understood</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scriptBody %}
+    <script>
+        function submitForm() {
+            let errorMessageElement = $("#errorMessage");
+            $.ajax({
+                url: "{% url 'interface:register' %}",
+                type: "POST",
+                header: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                data: $("#registerForm").serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        window.location.href = data.next;
+                    } else {
+                        for (let [key, value] of Object.entries(data.error)) {
+                            console.log(key, value);
+                            let _errorContainer = $("#error-" + key);
+                            _errorContainer.html("↑ " + value.join("<br>↑ "));
+                            _errorContainer.show();
+                        }
+                    }
+                },
+                error: function (data) {
+                    console.log(data);
+                    errorMessageElement.text("Something went wrong, please try again later.");
+                    errorMessageElement.show();
+                }
+            });
+        }
+
+        document.getElementById("registerForm").addEventListener('submit', function (e) {
+            e.preventDefault();
+            submitForm();
+        });
+    </script>
+{% endblock %}

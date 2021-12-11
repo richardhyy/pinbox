@@ -1,0 +1,51 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    Login - Charlotte
+{% endblock %}
+
+{% block scriptHead %}
+    {% if user.is_authenticated %}
+        <script>
+            window.location.href = "/";
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>Login</h1>
+
+    <div class="card">
+        <div class="card-body">
+            {% if form.errors %}
+                <div class="alert alert-warning" role="alert">
+                    There were errors in the username or password, please try again.
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'interface:login' %}">
+                {% csrf_token %}
+                <div class="mb-3 row">
+                    <label for="username" class="col-sm-2 col-form-label">Username: </label>
+                    <div class="col-auto">
+                        <input type="text" class="form-control" id="username" name="username">
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="password" class="col-sm-2 col-form-label">Password: </label>
+                    <div class="col-auto">
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center">
+                    <input type="submit" value="Login" class="btn btn-primary">
+                    <a href="{% url 'interface:register' %}" class="text-decoration-none">Don't have an account?</a>
+                </div>
+                <input type="hidden" name="next" value="{% url 'interface:editable_maps' %}">
+            </form>
+
+            {#<p><a href="{% url 'password_reset' %}">Lost password?</a></p>#}
+        </div>
+    </div>
+{% endblock %}

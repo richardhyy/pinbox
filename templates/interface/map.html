@@ -1,0 +1,278 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ page_title }}</title>
+
+    <link rel="stylesheet" href="{% static 'libs/bootstrap/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'interface/css/map.css' %}">
+    <link rel="stylesheet" href="{% static 'interface/libs/leaflet/leaflet.css' %}">
+
+    <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.js' %}"></script>
+    <script src="{% static 'interface/libs/leaflet/leaflet.js' %}"></script>
+    <script src="{% static 'interface/js/lazy-pagination.js' %}"></script>
+    <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'libs/jquery-ui/jquery-ui.js' %}"></script>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+
+        function pointListUrlBuilder(limit, page) {
+            return '{% url "api:filter_points" map_id %}?limit=' + limit + '&page=' + page;
+        }
+
+        function filteredPointListUrlBuilder(keyword, limit, page) {
+            return '{% url "api:filter_points" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
+        }
+
+        function lineListUrlBuilder(limit, page) {
+            return '{% url "api:filter_lines" map_id %}?limit=' + limit + '&page=' + page;
+        }
+
+        function filteredLineListUrlBuilder(keyword, limit, page) {
+            return '{% url "api:filter_lines" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
+        }
+
+        const mapDetailsUrl = '{% url "api:get_map_detail" map_id %}';
+
+        const collaboratorListUrl = '{% url "api:get_collaborators" map_id %}';
+        {% if user.is_authenticated %}
+        const addCollaboratorUrl = '{% url "api:add_collaborator" map_id %}';
+        const removeCollaboratorUrl = '{% url "api:remove_collaborator" map_id %}';
+        {% endif %}
+
+        const defaultMarkerIcon = L.icon({
+            iconUrl: '{% static 'interface/images/marker-icon-orange.png' %}',
+            iconRetinaUrl: '{% static 'interface/images/marker-icon-orange-2x.png' %}',
+            shadowUrl: '{% static 'interface/images/marker-shadow.png' %}',
+            iconSize: [25, 41],
+            shadowSize: [41, 41],
+            iconAnchor: [13, 40],
+            shadowAnchor: [13, 40],
+            popupAnchor: [0, -45]
+        });
+    </script>
+</head>
+
+<body>
+<div class="control-container">
+    <div class="card control-box">
+        <div class="card-body">
+            <div class="editing-area">
+                <div class="d-flex justify-content-between">
+                    <h5 class="card-title draggable">Map</h5>
+                    <div style="display: inline-block">
+                        <div style="display: inline-block">
+                            <a class="btn plain-btn pt-0 pb-0 dropdown-toggle-none" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <img src="{% static 'interface/images/toolbox.png' %}" alt="options" height="16px">
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="map-options">
+                                <li><a class="dropdown-item" role="button"
+                                       data-bs-toggle="modal" data-bs-target="#modalManageBaseMap"
+                                       onclick="loadBasemapList('{% url 'api:get_base_maps' %}')">
+                                    Change base map
+                                </a></li>
+                                <li><a class="dropdown-item" role="button"
+                                       data-bs-toggle="modal" data-bs-target="#modalManageCollaborator"
+                                       onclick="updateCollaboratorList()">
+                                    Collaborators
+                                </a></li>
+                            </ul>
+                        </div>
+
+                        <div style="display: inline-block">
+                            <a class="btn plain-btn pt-0 pb-0 dropdown-toggle-none" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <img src="{% static 'interface/images/export.png' %}" alt="export" height="16px">
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="export-options">
+                                <li><a class="dropdown-item"
+                                       onclick="exportPois('### TODO ###', 'shp')">ESRI
+                                    Shapefile (.shp)</a></li>
+                            </ul>
+                        </div>
+
+                        <div style="display: inline-block">
+                            <a class="btn plain-btn pt-0 pb-0 dropdown-toggle-none" data-bs-toggle="dropdown"
+                               aria-expanded="false" data-bs-auto-close="outside">
+                                <img src="{% static 'interface/images/trash.png' %}" alt="export" height="16px">
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="empty-options">
+                                <li>
+                                    <a class="dropdown-item" id="delete-map-btn"
+                                       onclick="
+                                               requireConfirm(
+                                               'delete-map-btn',
+                                               () => deleteMap('{% url 'api:delete_map' map_id %}'))"
+                                       data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                       title="Can NOT be undone">
+                                        Delete Map</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="non-editing-area">
+                <h5 class="card-title draggable">Map</h5>
+            </div>
+
+            <div class="search-bar mb-1"><input id="search-input" class="text-input" type="text"
+                                                placeholder="Search..."/></div>
+            <div id="search-result" class="entry-list" style="overflow-y: auto">
+                <ul id="poi-list">
+                </ul>
+            </div>
+            <div id="pagination-control" class="d-flex justify-content-between">
+                <div class="left">
+                    <span id="pageNumber" class="d-flex justify-content-between">
+                        <input id="pageNumber-input" class="form-control form-control-plaintext p-0" type="number"
+                               min="1" max="1" value="1"/>
+                        &nbsp;/&nbsp;
+                        <span id="pageNumber-total">1</span>
+                    </span>
+                </div>
+                <div class="right">
+                    <button class="plain-btn" onclick="changePage(1)">Home</button>
+                    <button class="plain-btn pagination-shift-button" onclick="changePage(page-1)">&lt;</button>
+                    <button class="plain-btn pagination-shift-button" onclick="changePage(page+1)">&gt;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toolbox-container editing-area">
+    <div class="card control-box" id="api-fetch-tool">
+        <div class="card-body">
+            <div class="d-flex justify-content-between" role="group" aria-label="Tool toggle button group">
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="btnradio1">
+                    <img class="toolbox-tool-icon" src="{% static 'interface/images/pointer.png' %}" alt="pointer tool">
+                </label>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="btnradio2">
+                    <img class="toolbox-tool-icon" src="{% static 'interface/images/marker.png' %}" alt="marker tool">
+                </label>
+
+                <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="btnradio3">
+                    <img class="toolbox-tool-icon" src="{% static 'interface/images/polyline.png' %}" alt="polyline tool">
+                </label>
+            </div>
+            <div class="drag-indicator draggable"></div>
+        </div>
+    </div>
+</div>
+<div id="map-container">
+    <div id="map">
+    </div>
+</div>
+
+
+<!-- Modals -->
+<!-- Manage collaborator -->
+<div class="modal fade" id="modalManageCollaborator" tabindex="-1" aria-labelledby="modalManageCollaborator"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Collaborators</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="list-group" id="collaborator-list">
+                <!-- Collaborator list goes here -->
+            </div>
+            <div class="d-flex justify-content-between p-2">
+                <button class="btn btn-secondary m-2" type="button" data-bs-toggle="modal"
+                        data-bs-target="#modalAddKey">
+                    New key
+                </button>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary m-2" type="button"
+                            onclick="updateCollaborator('{% url 'api:update_map' map_id %}')">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Manage base map -->
+<div class="modal fade" id="modalManageBaseMap" tabindex="-1" aria-labelledby="modalManageBaseMap" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Choose Base Map</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 m-2" id="base-map-list">
+                <!-- Base map list goes here -->
+            </div>
+            <div class="d-flex justify-content-end p-2">
+                <button type="button" class="btn btn-primary m-2" data-bs-dismiss="modal">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="generic-toast" class="toast position-fixed bottom-0 end-0 p-2 m-2 top-control" role="alert"
+     aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body" id="toast-message">
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+    </div>
+</div>
+
+
+<script src="{% static 'interface/js/generic-view-util.js' %}"></script>
+<script src="{% static 'interface/js/data-loader.js' %}"></script>
+<script src="{% static 'interface/js/map-eventhandler.js' %}"></script>
+<script src="{% static 'interface/js/map.js' %}"></script>
+
+<!-- API related data loader -->
+<script>
+    enableDrag('.control-box');
+    enableDrag('.toolbox-container');
+    updateFeatureList();
+    enableDismissablePopover(false);
+    registerDropdownToggle('.dropdown-toggle-none');
+
+    function resizeToolboxes() {
+        document.getElementById("search-result").style.maxHeight = ($(document).height() * 0.7 - $("#api-fetch-tool").height()) + "px";
+    }
+
+    window.addEventListener('resize', function (event) {
+        resizeToolboxes();
+    }, true);
+
+    resizeToolboxes();
+
+</script>
+
+</body>
+</html>

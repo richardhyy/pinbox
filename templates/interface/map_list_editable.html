@@ -1,0 +1,114 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block cssHead %}
+    <link href="{% static 'interface/css/index.css' %}" rel="stylesheet">
+{% endblock %}
+{% block scriptHead %}
+    <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        const mapUpdateUrl = '{% url 'api:update_map' 0 %}'.substr(0, '{% url 'api:update_map' 0 %}'.length - 1);
+    </script>
+{% endblock %}
+
+{% block navbarRight %}
+
+{% endblock %}
+
+{% block content %}
+    {% if error_message %}
+        <div class="alert alert-warning" role="alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <br>
+
+    <div class="d-flex justify-content-between">
+        <h1>My Maps</h1>
+        <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                data-bs-target="#modalCreateWorkspace">Create
+        </button>
+    </div>
+    <br>
+    <div id="private-map-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <!-- Private maps goes here -->
+    </div>
+    <br>
+    <div id="shared-map-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <!-- Shared maps goes here -->
+    </div>
+
+    <!-- Modals -->
+    <!-- Create map -->
+    <div class="modal fade" id="modalCreateWorkspace" tabindex="-1" aria-labelledby="modalCreateWorkspace"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Map</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="input-map-name" class="form-label">Name</label>
+                            <input class="form-control" id="input-map-name" required aria-required="true">
+                        </div>
+                        <div class="mb-3">
+                            <label for="input-map-description" class="form-label">Description <span
+                                    class="text-muted">(optional)</span></label>
+                            <input class="form-control" id="input-map-description">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary"
+                                onclick="createMap('{% url 'api:create_map' %}')">Create
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scriptBody %}
+    <script src="{% static 'libs/geopattern-1.2.3.min.js' %}"></script>
+    <script src="{% static 'interface/js/generic-view-util.js' %}"></script>
+    <script src="{% static 'interface/js/map-list-editable.js' %}"></script>
+
+    <script>
+        // Load private maps
+        loadEditableMapList(
+            '{% url 'api:get_private_maps' %}',
+            '{% url 'interface:map' 0 %}'.substr(0, '{% url 'interface:map' 0 %}'.length - 1),
+            'private-map-list'
+        );
+        // Load shared maps
+        loadEditableMapList(
+            '{% url 'api:get_shared_maps' %}',
+            '{% url 'interface:map' 0 %}'.substr(0, '{% url 'interface:map' 0 %}'.length - 1),
+            'shared-map-list'
+        );
+    </script>
+{% endblock %}

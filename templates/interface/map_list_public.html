@@ -1,0 +1,41 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block cssHead %}
+    <link href="{% static 'interface/css/index.css' %}" rel="stylesheet">
+{% endblock %}
+{% block scriptHead %}
+    <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    {% if error_message %}
+        <div class="alert alert-warning" role="alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+    <br>
+
+    <h1>Browse Maps</h1>
+    <br>
+    <div id="map-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <!-- Public maps goes here -->
+    </div>
+
+
+{% endblock %}
+
+{% block scriptBody %}
+    <script src="{% static 'libs/geopattern-1.2.3.min.js' %}"></script>
+    <script src="{% static 'interface/js/generic-view-util.js' %}"></script>
+    <script src="{% static 'interface/js/map-list-public.js' %}"></script>
+
+    <script>
+        loadPublicMapList(
+            '{% url 'api:get_public_maps' %}',
+            '{% url 'interface:map' 0 %}'.substr(0, '{% url 'interface:map' 0 %}'.length - 1)
+        );
+    </script>
+{% endblock %}
