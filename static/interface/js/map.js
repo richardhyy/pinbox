@@ -39,6 +39,7 @@ function loadBasemapList(url) {
                     `);
                     col.click(function () {
                         loadBasemap(baseMap.url, baseMap.max_zoom, baseMap.attribution);
+                        updateBaseMap(baseMap.id);
                     });
                     baseMapList.append(col);
                 }
@@ -92,22 +93,6 @@ function updateCollaboratorList() {
     );
 }
 
-function deleteMap(url) {
-    $.ajax({
-        url: url,
-        type: 'POST',
-        headers: {
-            'X-CSRFToken': csrftoken
-        },
-        success: function (data) {
-            window.location.href = '/';
-        },
-        error: function (data) {
-            showErrorToastAjax(data, 'failed deleting map');
-        }
-    });
-}
-
 function addCollaborator(username) {
     showProcessingToast();
     $.ajax({
@@ -132,6 +117,42 @@ function addCollaborator(username) {
         },
         error: function (data) {
             showErrorToastAjax(data, 'failed checking collaborator');
+        }
+    });
+}
+
+function updateBaseMap(id) {
+    showProcessingToast();
+    $.ajax({
+        url: updateMapInfoUrl,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'base_map': id
+        },
+        success: function (data) {
+            showToast('Successfully updated base map');
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed updating basemap');
+        }
+    });
+}
+
+function deleteMap(url) {
+    $.ajax({
+        url: url,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        success: function (data) {
+            window.location.href = '/';
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed deleting map');
         }
     });
 }
@@ -192,69 +213,10 @@ function updatePoiList() {
 }
 
 
-// Heatmap
-
-let heatmapLayer = undefined;
-
-// TODO: Fix heatmap on Safari
-function loadHeadMap(field) {
-    showProcessingToast();
-    $(function () {
-        $.ajax({
-            type: "get",
-            url: heatmapPoiListUrlBuilder($('#search-input').val(), field),
-            success: function (data) {
-                let poiData = {
-                    max: data.max,
-                    data: data.pois
-                };
-                let cfg = {
-                    "radius": 0.004,
-                    "maxOpacity": .8,
-                    "scaleRadius": true,
-                    "useLocalExtrema": true,
-                    latField: "latitude",
-                    lngField: "longitude",
-                    valueField: "value"
-                };
-                if (heatmapLayer === undefined) {
-                    heatmapLayer = new HeatmapOverlay(cfg);
-                    map.addLayer(heatmapLayer);
-                }
-                heatmapLayer.setData(poiData);
-                showToast('Heatmap for ' + field + ' has been loaded');
-            }.bind(document),
-            error: function (data) {
-                showErrorToastAjax(data, 'failed loading heatmap');
-            }
-        })
-    });
-}
-
-
-L.Control.extend({
-    options: {
-        position: 'topleft',
-    },
-
-    onAdd: function (map) {
-        var controlDiv = L.DomUtil.create('div', 'leaflet-control-command');
-        L.DomEvent
-            .addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
-            .addListener(controlDiv, 'click', L.DomEvent.preventDefault)
-            .addListener(controlDiv, 'click', function () {
-                MapShowCommand();
-            });
-
-        var controlUI = L.DomUtil.create('div', 'leaflet-control-command-interior', controlDiv);
-        controlUI.title = 'Map Commands';
-        return controlDiv;
-    }
+// MARK: - Load base map
+fetchMapDetail((data) => {
+    loadBasemap(data.base_map.url, data.base_map.max_zoom, data.base_map.attribution);
 });
-
-L.control.command = function (options) {
-    return new L.Control.Command(options);
-};
 
 
 // MARK: - Search related

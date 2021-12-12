@@ -57,6 +57,7 @@
         {% if user.is_authenticated %}
         const addCollaboratorUrl = '{% url "api:add_collaborator" map_id %}';
         const removeCollaboratorUrl = '{% url "api:remove_collaborator" map_id %}';
+        const updateMapInfoUrl = '{% url "api:update_map" map_id %}';
         {% endif %}
 
         const defaultMarkerIcon = L.icon({
