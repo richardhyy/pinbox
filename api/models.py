@@ -58,7 +58,7 @@ class BaseMap(models.Model):
 
 # Geographical Models
 
-GEOJSON_PROPERTY_FIELDS = ('name', 'description', 'created_by', 'created_at')
+GEOJSON_PROPERTY_FIELDS = ('pk', 'name', 'description', 'created_by', 'created_at')
 
 class Point(models.Model):
     name = models.TextField(max_length=100)

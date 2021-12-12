@@ -15,12 +15,12 @@ urlpatterns = [
     path('map/sharelink/<int:map_id>', views.get_map_share_link, name='map_share_link'),
 
     # Entity related
-    path('entity/point/filter/<int:map_id>', views.filter_points, name='filter_points'),
+    path('entity/filter/<int:map_id>', views.filter_features, name='filter_features'),
+
     path('entity/point/create/<int:map_id>', views.create_point, name='create_point'),
-    # path('entity/point/update/<int:map_id>/<int:point_id>', views.update_point, name='update_point'),
+    path('entity/point/update/<int:map_id>/<int:point_id>', views.update_point, name='update_point'),
     path('entity/point/delete/<int:map_id>/<int:point_id>', views.delete_point, name='delete_point'),
 
-    path('entity/line/filter/<int:map_id>', views.filter_lines, name='filter_lines'),
     path('entity/line/create/<int:map_id>', views.create_line, name='create_line'),
     # path('entity/line/update/<int:map_id>/<int:line_id>', views.update_line, name='update_line'),
     path('entity/line/delete/<int:map_id>/<int:line_id>', views.delete_line, name='delete_line'),

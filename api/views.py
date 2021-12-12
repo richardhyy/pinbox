@@ -2,6 +2,7 @@ import json
 import os
 import re
 import uuid
+from itertools import chain
 
 from django.contrib.gis.geos import GEOSException
 from django.contrib.humanize.templatetags import humanize
@@ -400,9 +401,9 @@ def delete_line(request, map_id, line_id):
     return JsonResponse({'status': 'ok'}, status=200)
 
 
-def filter_points(request, map_id):
+def filter_features(request, map_id):
     """
-    Filter points in a map
+    Filter features in a map
     :param request:
     :param map_id:
     :return:
@@ -421,54 +422,30 @@ def filter_points(request, map_id):
     keyword = request.GET.get('keyword', None)
 
     if keyword:
-        points = map.points.filter(name__icontains=keyword).order_by('created_at')
-
+        points = map.points.filter(name__icontains=keyword)
+        lines = map.polylines.filter(name__icontains=keyword)
     else:
         points = map.points.all()
-
-    total = points.count()
-    returned_points = points[(page - 1) * per_page:page * per_page] if page > 0 and per_page > 0 else points
-
-    return JsonResponse({
-        'points': feature_to_geojson(returned_points),
-        'total': total
-    }, status=200)
-
-
-def filter_lines(request, map_id):
-    """
-    Filter lines in a map
-    :param request:
-    :param map_id:
-    :return:
-    """
-    try:
-        page = int(request.GET.get('page', -1))
-        per_page = int(request.GET.get('limit', -1))
-    except TypeError:
-        return JsonResponse({'error': 'Invalid pagination parameters'}, status=400)
-
-    try:
-        map = get_map_if_authenticated(request.user, map_id)
-    except AccessError as e:
-        return JsonResponse({'error': e.message}, status=e.status_code)
-
-    keyword = request.GET.get('keyword', None)
-
-    if keyword:
-        lines = map.polylines.filter(name__icontains=keyword).order_by('created_at')
-
-    else:
         lines = map.polylines.all()
 
-    total = lines.count()
-    returned_lines = lines[(page - 1) * per_page:page * per_page] if page > 0 and per_page > 0 else lines
+    total = points.count() + lines.count()
+    # Add points and lines to a feature collection then sort by create_at
+    features = sorted(
+        chain(
+            points,
+            lines,
+        ),
+        key=lambda feature: feature.created_at,
+        reverse=True,
+    )
+
+    if page >= 0 and per_page > 0:
+        features = features[(page - 1) * per_page:page * per_page]
 
     return JsonResponse({
-        'lines': feature_to_geojson(returned_lines),
-        'total': total
+        'total': total,
+        'geom': feature_to_geojson(features, True),
     }, status=200)
-
 
 # MARK: - Collaboration APIs
 
@@ -579,13 +556,13 @@ def check_lon_lat(lon, lat):
     return True
 
 
-def feature_to_geojson(feature):
+def feature_to_geojson(feature, param_as_list=False):
     """
     Convert a feature to a geojson object
     :param feature:
     :return:
     """
-    return serialize('geojson', feature if type(feature) == QuerySet else [feature], geometry_field='geom', fields=models.GEOJSON_PROPERTY_FIELDS)
+    return serialize('geojson', feature if type(feature) == QuerySet or param_as_list else [feature], geometry_field='geom', fields=models.GEOJSON_PROPERTY_FIELDS)
 
 
 # MARK: - Authentication related helper functions
