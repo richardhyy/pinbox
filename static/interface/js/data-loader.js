@@ -30,3 +30,38 @@ function loadBasemap(url, maxZoom, attribution) {
     });
     map.addLayer(baseMapLayer);
 }
+
+function loadGeoJSON(geojson) {
+    L.geoJSON(geojson,
+        {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: defaultMarkerIcon,
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                let descriptionHtml = feature.properties.description ? '<p class="text-muted">' + feature.properties.description + '</p>' : "";
+                layer.bindPopup(`
+                    <div class="marker-popup-container">
+                        <input id="marker-name-input-${feature.properties.pk}" class="form-control form-control-plaintext" value="${feature.properties.name}"/>
+                    </div>
+                `);
+                layer.on('click', function (e) {
+                    this.openPopup();
+                });
+            }
+        }
+    ).addTo(map);
+}
+
+function addMarker(lat, lng, popupContent, onDragEnd) {
+    let marker = L.marker([lat, lng]).addTo(map);
+    marker.bindPopup(popupContent);
+    marker.on('mouseover', function (e) {
+        this.openPopup();
+    });
+    marker.on('mouseout', function (e) {
+        this.closePopup();
+    });
+    marker.on('dragend', onDragEnd);
+}

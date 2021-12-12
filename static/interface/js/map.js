@@ -195,21 +195,20 @@ let page = 0;
 let pagination = undefined;
 
 
-function updatePoiList() {
-    pagination = new LazyPagination(
-        6,
-        poiListUrlBuilder,
-        updatePageEntries,
-        updatePageNumbers,
-        function () {
-            clearInnerAndShowSpinner('poi-list');
-        },
-        function (data) {
-            showErrorToastAjax(data, 'failed fetching page');
-        }
-    );
+function updateFeatureList() {
+    showProcessingToast();
+    let keyword = $('#search-input').val();
 
-    changePage(1);
+    $.ajax({
+        url: featureListUrlBuilder(-1, -1),
+        type: 'GET',
+        success: function (data) {
+            loadGeoJSON(JSON.parse(data.geom));
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed loading features');
+        }
+    })
 }
 
 
@@ -351,3 +350,8 @@ function poiSpotlight(id) {
         }
     }
 }
+
+// MARK: - Editor related
+
+let editor = new MapEditor();
+editor.setSelectedTool(0);

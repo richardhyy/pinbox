@@ -35,30 +35,38 @@
         const csrftoken = getCookie('csrftoken');
 
 
-        function pointListUrlBuilder(limit, page) {
-            return '{% url "api:filter_points" map_id %}?limit=' + limit + '&page=' + page;
+        function featureListUrlBuilder(limit, page) {
+            return '{% url "api:filter_features" map_id %}?limit=' + limit + '&page=' + page;
         }
 
-        function filteredPointListUrlBuilder(keyword, limit, page) {
-            return '{% url "api:filter_points" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
-        }
-
-        function lineListUrlBuilder(limit, page) {
-            return '{% url "api:filter_lines" map_id %}?limit=' + limit + '&page=' + page;
-        }
-
-        function filteredLineListUrlBuilder(keyword, limit, page) {
-            return '{% url "api:filter_lines" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
+        function filteredFeatureListUrlBuilder(keyword, limit, page) {
+            return '{% url "api:filter_features" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
         }
 
         const mapDetailsUrl = '{% url "api:get_map_detail" map_id %}';
 
         const collaboratorListUrl = '{% url "api:get_collaborators" map_id %}';
         {% if user.is_authenticated %}
-        const addCollaboratorUrl = '{% url "api:add_collaborator" map_id %}';
-        const removeCollaboratorUrl = '{% url "api:remove_collaborator" map_id %}';
-        const updateMapInfoUrl = '{% url "api:update_map" map_id %}';
+            const addCollaboratorUrl = '{% url "api:add_collaborator" map_id %}';
+            const removeCollaboratorUrl = '{% url "api:remove_collaborator" map_id %}';
+            const updateMapInfoUrl = '{% url "api:update_map" map_id %}';
+            const createPointUrl = '{% url "api:create_point" map_id %}';
+            const updatePointUrl = '{% url "api:update_point" map_id 0 %}'.substring(0, '{% url "api:update_point" map_id 0 %}'.length - 1);
+            const deletePointUrl = '{% url "api:delete_point" map_id 0 %}'.substring(0, '{% url "api:delete_point" map_id 0 %}'.length - 1);
+            const createLineUrl = '{% url "api:create_line" map_id %}';
+            const deleteLineUrl = '{% url "api:delete_line" map_id 0 %}'.substring(0, '{% url "api:delete_line" map_id 0 %}'.length - 1);
         {% endif %}
+
+        const smallMarkerIcon = L.icon({
+            iconUrl: '{% static 'interface/images/marker-icon.png' %}',
+            iconRetinaUrl: '{% static 'interface/images/marker-icon-2x.png' %}',
+            shadowUrl: '{% static 'interface/images/marker-shadow-small.png' %}',
+            iconSize: [20, 33],
+            shadowSize: [33, 33],
+            iconAnchor: [10, 32],
+            shadowAnchor: [10, 32],
+            popupAnchor: [0, -37]
+        });
 
         const defaultMarkerIcon = L.icon({
             iconUrl: '{% static 'interface/images/marker-icon-orange.png' %}',
@@ -167,18 +175,19 @@
         <div class="card-body">
             <div class="d-flex justify-content-between" role="group" aria-label="Tool toggle button group">
                 <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
-                <label class="btn btn-outline-secondary" for="btnradio1">
+                <label class="btn btn-outline-secondary" for="btnradio1" onclick="editor.setSelectedTool(0)">
                     <img class="toolbox-tool-icon" src="{% static 'interface/images/pointer.png' %}" alt="pointer tool">
                 </label>
 
                 <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
-                <label class="btn btn-outline-secondary" for="btnradio2">
+                <label class="btn btn-outline-secondary" for="btnradio2" onclick="editor.setSelectedTool(1)">
                     <img class="toolbox-tool-icon" src="{% static 'interface/images/marker.png' %}" alt="marker tool">
                 </label>
 
                 <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
-                <label class="btn btn-outline-secondary" for="btnradio3">
-                    <img class="toolbox-tool-icon" src="{% static 'interface/images/polyline.png' %}" alt="polyline tool">
+                <label class="btn btn-outline-secondary" for="btnradio3" onclick="editor.setSelectedTool(2)">
+                    <img class="toolbox-tool-icon" src="{% static 'interface/images/polyline.png' %}"
+                         alt="polyline tool">
                 </label>
             </div>
             <div class="drag-indicator draggable"></div>
@@ -252,6 +261,7 @@
 
 <script src="{% static 'interface/js/generic-view-util.js' %}"></script>
 <script src="{% static 'interface/js/data-loader.js' %}"></script>
+<script src="{% static 'interface/js/map-editor.js' %}"></script>
 <script src="{% static 'interface/js/map-eventhandler.js' %}"></script>
 <script src="{% static 'interface/js/map.js' %}"></script>
 
