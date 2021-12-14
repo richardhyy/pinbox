@@ -281,8 +281,11 @@ def update_point(request, map_id, point_id):
 
     name = request.POST.get('name', None)
     description = request.POST.get('description', None)
-    longitude = request.POST.get('longitude', None)
-    latitude = request.POST.get('latitude', None)
+    try:
+        longitude = float(request.POST.get('longitude', None))
+        latitude = float(request.POST.get('latitude', None))
+    except TypeError:
+        return JsonResponse({'error': 'Invalid longitude or latitude'}, status=400)
 
     if name:
         point.name = name
@@ -370,7 +373,51 @@ def create_line(request, map_id):
     return JsonResponse({'status': 'ok', 'geom': feature_to_geojson(line)}, status=200)
 
 
-# TODO: API for updating a line
+def update_line(request, map_id, line_id):
+    """
+    Update a line
+    :param request:
+    :param map_id:
+    :param line_id:
+    :return:
+    """
+    try:
+        map = get_map_if_authenticated(request.user, map_id)
+    except AccessError as e:
+        return JsonResponse({'error': e.message}, status=e.status_code)
+
+    if not map.can_edit(request.user):
+        return JsonResponse({'error': 'You are not allowed to update lines in this map'}, status=403)
+
+    # The line must be in the map
+    try:
+        line = map.polylines.get(id=line_id)
+    except models.LineString.DoesNotExist:
+        return JsonResponse({'error': 'Line not found'}, status=404)
+
+    name = request.POST.get('name', None)
+    description = request.POST.get('description', None)
+    linestring_wkt = request.POST.get('linestring', None)
+
+    if name:
+        line.name = name
+    if description:
+        line.description = description
+    if linestring_wkt:
+        try:
+            linestring = geos.fromstr(linestring_wkt)
+        except (GEOSException, ValueError):
+            return JsonResponse({'error': 'Invalid linestring: failed parsing WKT'}, status=400)
+
+        if not linestring.geom_type == 'LineString':
+            return JsonResponse({'error': 'Invalid linestring'}, status=400)
+
+        line.geom = linestring
+
+    line.save()
+
+    return JsonResponse({'status': 'ok'}, status=200)
+
 
 def delete_line(request, map_id, line_id):
     """

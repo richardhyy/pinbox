@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from .models import BaseMap
+import api.models as models
 
 
 class MapViewTests(TestCase):
@@ -109,6 +110,37 @@ class MapViewTests(TestCase):
         response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
         self.assertContains(response, '67.89', status_code=200)
 
+    def test_update_point(self):
+        # Create map
+        self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
+        map_id = self._get_first_private_map_id()
+        # Create point
+        self.client.post(reverse('api:create_point', kwargs={'map_id': map_id}),
+                                    {
+                                        'name': 'test_point',
+                                        'longitude': 123.456,
+                                        'latitude': 67.89,
+                                    })
+        # Get point list and get the last point id
+        models.Point.objects.filter(created_by=self.user).order_by('-id')
+        point_id = models.Point.objects.filter(created_by=self.user).order_by('-id')[0].id
+
+        # Update point
+        response = self.client.post(reverse('api:update_point', kwargs={'map_id': map_id, 'point_id': point_id}),
+                                    {
+                                        'name': 'test_point_updated',
+                                        'description': 'test_description_updated',
+                                        'longitude': 44.55,
+                                        'latitude': 66.77,
+                                    })
+        self.assertEqual(response.status_code, 200)
+
+        # Get points
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
+        self.assertContains(response, 'test_point_updated', status_code=200)
+        self.assertContains(response, 'test_description_updated', status_code=200)
+        self.assertContains(response, '44.55', status_code=200)
+
     def test_delete_point(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
@@ -140,6 +172,35 @@ class MapViewTests(TestCase):
         self.assertContains(response, '1.0, 1.0', status_code=200)
         # Get lines
         response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
+
+    def test_update_line(self):
+        # Create map
+        self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
+        map_id = self._get_first_private_map_id()
+        # Create line
+        self.client.post(reverse('api:create_line', kwargs={'map_id': map_id}),
+                                    {
+                                        'name': 'test_line',
+                                        'linestring': 'LINESTRING(1 1, 2 2, 3 3)'
+                                    })
+        # Get line list and get the last line id
+        models.LineString.objects.filter(created_by=self.user).order_by('-id')
+        line_id = models.LineString.objects.filter(created_by=self.user).order_by('-id')[0].id
+
+        # Update line
+        response = self.client.post(reverse('api:update_line', kwargs={'map_id': map_id, 'line_id': line_id}),
+                                    {
+                                        'name': 'test_line_updated',
+                                        'description': 'test_description_updated',
+                                        'linestring': 'LINESTRING(4 4, 5 5, 6 6)'
+                                    })
+        self.assertEqual(response.status_code, 200)
+
+        # Get lines
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
+        self.assertContains(response, 'test_line_updated', status_code=200)
+        self.assertContains(response, '4.0, 4.0', status_code=200)
+        self.assertContains(response, 'test_description_updated', status_code=200)
 
     def test_delete_line(self):
         # Create map

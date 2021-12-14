@@ -22,7 +22,7 @@ urlpatterns = [
     path('entity/point/delete/<int:map_id>/<int:point_id>', views.delete_point, name='delete_point'),
 
     path('entity/line/create/<int:map_id>', views.create_line, name='create_line'),
-    # path('entity/line/update/<int:map_id>/<int:line_id>', views.update_line, name='update_line'),
+    path('entity/line/update/<int:map_id>/<int:line_id>', views.update_line, name='update_line'),
     path('entity/line/delete/<int:map_id>/<int:line_id>', views.delete_line, name='delete_line'),
 
     # Style related
