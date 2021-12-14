@@ -65,3 +65,14 @@ function addMarker(lat, lng, popupContent, onDragEnd) {
     });
     marker.on('dragend', onDragEnd);
 }
+
+function addPolyline(wkt, popupContent, onClick) {
+    let polyline = L.polyline(wkt, {
+        color: '#7ebbae',
+        weight: 3,
+        opacity: 1,
+        smoothFactor: 1
+    }).addTo(map);
+    polyline.bindPopup(popupContent);
+    polyline.on('click', onClick);
+}
