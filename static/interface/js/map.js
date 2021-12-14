@@ -253,15 +253,46 @@ function clearSearchResult() {
     document.getElementById("poi-list").innerHTML = "";
 }
 
-function createMarker(poi, isSpotlight = false) {
-    return L.marker([poi.latitude, poi.longitude]
-        , {
-            icon: isSpotlight ? highlightMarkerIcon : normalMarkerIcon,
-            zIndexOffset: isSpotlight ? 10 : 0,
-            title: poi.name
+
+function updatePoint(id, name, description = undefined) {
+    showProcessingToast();
+    $.ajax({
+        url: updatePointUrl + id,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'name': name,
+            'description': description
+        },
+        success: function (data) {
+            showToast('Successfully updated point');
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed updating point');
         }
-    ).addTo(map).on('click', function (e) {
-        poiSpotlight(poi.id);
+    });
+}
+
+function updatePolyline(id, name, description = undefined) {
+    showProcessingToast();
+    $.ajax({
+        url: updatePolylineUrl + id,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'name': name,
+            'description': description
+        },
+        success: function (data) {
+            showToast('Successfully updated polyline');
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed updating polyline');
+        }
     });
 }
 
