@@ -39,7 +39,10 @@ let userFeatureLayer = L.geoJSON(null, {
                                        onclick="
                                                requireConfirm(
                                                'delete-feature-${feature.properties.pk}',
-                                               () => ${deleteFunctionName}(${feature.properties.pk}))"
+                                               () => {
+                                                   ${deleteFunctionName}(${feature.properties.pk});
+                                                   map.closePopup();
+                                               })"
                                        data-bs-toggle="tooltip" data-bs-placement="bottom"
                                        title="Can NOT be undone">
                                         Delete</a>
@@ -88,3 +91,8 @@ function loadGeoJSON(geojson, append = false) {
     }
     userFeatureLayer.addData(geojson);
 }
+
+// Update data every 3 seconds
+setInterval(function () {
+    updateFeatureList();
+}, 3000);

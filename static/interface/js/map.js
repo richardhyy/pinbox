@@ -196,7 +196,6 @@ let pagination = undefined;
 
 
 function updateFeatureList() {
-    showProcessingToast();
     let keyword = $('#search-input').val();
 
     $.ajax({
