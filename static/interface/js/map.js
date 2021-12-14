@@ -278,7 +278,7 @@ function updatePoint(id, name, description = undefined) {
 function updatePolyline(id, name, description = undefined) {
     showProcessingToast();
     $.ajax({
-        url: updatePolylineUrl + id,
+        url: updateLineUrl + id,
         type: 'POST',
         headers: {
             'X-CSRFToken': csrftoken
