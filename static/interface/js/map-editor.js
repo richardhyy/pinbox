@@ -129,13 +129,9 @@ class MarkerTool extends MapEditorTool {
             success: function (data) {
                 showToast("Marker created");
 
+                marker.remove();
                 let geojson = JSON.parse(data.geom);
-                marker.options.markerId = geojson.features[0].properties.pk;
-
-                // // Bind dragend event
-                // marker.on('dragend', function (e) {
-                //     this._updateMarkerRequest(e.target);
-                // }.bind(this));
+                loadGeoJSON(geojson);
             },
             error: function (data) {
                 showErrorToastAjax(data, 'failed creating marker');
@@ -298,7 +294,7 @@ class PolylineTool extends MapEditorTool {
                 showToast("Polyline created");
 
                 let geojson = JSON.parse(data.geom);
-
+                loadGeoJSON(geojson);
             },
             error: function (data) {
                 showErrorToastAjax(data, 'failed creating polyline');

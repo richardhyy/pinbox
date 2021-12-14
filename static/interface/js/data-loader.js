@@ -4,6 +4,12 @@ let baseMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.p
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 });
 
+const genericFeatureStyle = {
+    color: '#7ebbae',
+    weight: 3,
+    fillColor: '#ffffff',
+};
+
 let map = L.map("map", {
     center: [0, 0],
     zoom: 2,
@@ -49,30 +55,8 @@ function loadGeoJSON(geojson) {
                 layer.on('click', function (e) {
                     this.openPopup();
                 });
-            }
+            },
+            style: genericFeatureStyle
         }
     ).addTo(map);
-}
-
-function addMarker(lat, lng, popupContent, onDragEnd) {
-    let marker = L.marker([lat, lng]).addTo(map);
-    marker.bindPopup(popupContent);
-    marker.on('mouseover', function (e) {
-        this.openPopup();
-    });
-    marker.on('mouseout', function (e) {
-        this.closePopup();
-    });
-    marker.on('dragend', onDragEnd);
-}
-
-function addPolyline(wkt, popupContent, onClick) {
-    let polyline = L.polyline(wkt, {
-        color: '#7ebbae',
-        weight: 3,
-        opacity: 1,
-        smoothFactor: 1
-    }).addTo(map);
-    polyline.bindPopup(popupContent);
-    polyline.on('click', onClick);
 }
