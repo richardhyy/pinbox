@@ -266,6 +266,36 @@ function createMarker(poi, isSpotlight = false) {
     });
 }
 
+function deletePoint(id) {
+    showProcessingToast();
+    $.ajax({
+        url: deletePointUrl + id,
+        type: 'GET',
+        success: function (data) {
+            showToast('Marker deleted');
+            updateFeatureList();
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed deleting marker');
+        }
+    });
+}
+
+function deletePolyline(id) {
+    showProcessingToast();
+    $.ajax({
+        url: deleteLineUrl + id,
+        type: 'GET',
+        success: function (data) {
+            showToast('Polyline deleted');
+            updateFeatureList();
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed deleting polyline');
+        }
+    });
+}
+
 function updatePageNumbers() {
     let pageInput = $("#pageNumber-input");
     pageInput.val(page);
