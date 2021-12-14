@@ -14,6 +14,22 @@ html, body, #map-container {
     min-width: 100px;
 }
 
+.cursor-icon {
+    background: none;
+    border: none;
+}
+
+.user-cursor-name {
+    position: relative;
+    left: 15px;
+    width: fit-content;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
 .top-control {
     z-index: 10000;
 !important;
