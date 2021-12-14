@@ -111,7 +111,7 @@ class MarkerTool extends MapEditorTool {
 
         this._createMarkerRequest(marker);
 
-        marker.addTo(map);
+        marker.addTo(editableLayer);
     }
 
     _createMarkerRequest(marker) {
@@ -131,7 +131,7 @@ class MarkerTool extends MapEditorTool {
 
                 marker.remove();
                 let geojson = JSON.parse(data.geom);
-                loadGeoJSON(geojson);
+                loadGeoJSON(geojson, true);
             },
             error: function (data) {
                 showErrorToastAjax(data, 'failed creating marker');
@@ -202,7 +202,7 @@ class PolylineTool extends MapEditorTool {
                 weight: 3,
                 opacity: 0.8,
                 smoothFactor: 1
-            }).addTo(map);
+            }).addTo(editableLayer);
 
             let junction = L.circle(latlng, {
                 color: '#7ebbae',
@@ -210,7 +210,7 @@ class PolylineTool extends MapEditorTool {
                 fillOpacity: 1,
                 radius: 20,
                 weight: 3,
-            }).addTo(map);
+            }).addTo(editableLayer);
             this.tempJunctions.push(junction);
         }
     }
@@ -233,7 +233,7 @@ class PolylineTool extends MapEditorTool {
                 weight: 3,
                 opacity: 0.8,
                 smoothFactor: 1
-            }).addTo(map);
+            }).addTo(editableLayer);
         }
     }
 
@@ -294,7 +294,7 @@ class PolylineTool extends MapEditorTool {
                 showToast("Polyline created");
 
                 let geojson = JSON.parse(data.geom);
-                loadGeoJSON(geojson);
+                loadGeoJSON(geojson, true);
             },
             error: function (data) {
                 showErrorToastAjax(data, 'failed creating polyline');
