@@ -43,6 +43,8 @@
             return '{% url "api:filter_features" map_id %}?keyword=' + keyword + '&limit=' + limit + '&page=' + page;
         }
 
+        const viewerUsername = '{{ user.username }}';
+
         const mapDetailsUrl = '{% url "api:get_map_detail" map_id %}';
 
         const collaboratorListUrl = '{% url "api:get_collaborators" map_id %}';

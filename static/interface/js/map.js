@@ -214,6 +214,12 @@ function updateFeatureList() {
 // MARK: - Load base map
 fetchMapDetail((data) => {
     loadBasemap(data.base_map.url, data.base_map.max_zoom, data.base_map.attribution);
+
+    if (data.owner === viewerUsername || data.collaborators.includes(viewerUsername)) {
+        $('.non-editing-area').hide();
+    } else {
+        $('.editing-area').hide();
+    }
 });
 
 
