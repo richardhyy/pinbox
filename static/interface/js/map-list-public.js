@@ -32,7 +32,6 @@ function loadPublicMapList(url, map_base_url) {
                                             <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
                                         </a>
                                     </div>
-<!--                                    <small class="text-muted" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Last viewed">${_lastView}</small>-->
                                 </div>
                             </div>
                         </div>

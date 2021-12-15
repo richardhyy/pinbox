@@ -31,19 +31,15 @@ def editable_maps_request(request):
 def map_request(request, map_id):
     """
     View function for map page.
-    If the user has not logged in, redirect to login page.
     :param request:
     :param map_id:
     :return:
     """
-    if request.user.is_authenticated:
-        return render(request, 'interface/map.html', {
-            'page_title': 'Map - PinBox',
-            'user': request.user,
-            'map_id': map_id
-        })
-    else:
-        return redirect(reverse('interface:login'))
+    return render(request, 'interface/map.html', {
+        'page_title': 'Map - PinBox',
+        'user': request.user,
+        'map_id': map_id
+    })
 
 
 def register_request(request):
