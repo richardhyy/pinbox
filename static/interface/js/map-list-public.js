@@ -24,8 +24,8 @@ function loadPublicMapList(url, map_base_url) {
                             <div class="geo-pattern" id="pattern-${_id}">${_name}</div>
     
                             <div class="card-body">
-                                <p class="fs-4 pb-0">${_name}</p>
-                                <p class="text-muted mb-1">${_description}</p>
+                                <p class="fs-4 pb-0 pt-1 mb-1">${_name}</p>
+                                <p class="text-muted mb-2 pt-0">${_description}</p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="btn-group">
                                         <a href="${_url}">
