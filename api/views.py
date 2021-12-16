@@ -281,17 +281,20 @@ def update_point(request, map_id, point_id):
 
     name = request.POST.get('name', None)
     description = request.POST.get('description', None)
-    try:
-        longitude = float(request.POST.get('longitude', None))
-        latitude = float(request.POST.get('latitude', None))
-    except TypeError:
-        return JsonResponse({'error': 'Invalid longitude or latitude'}, status=400)
+    longitude = request.POST.get('longitude', None)
+    latitude = request.POST.get('latitude', None)
 
     if name:
         point.name = name
     if description:
         point.description = description
     if longitude and latitude:
+        try:
+            longitude = float(longitude)
+            latitude = float(latitude)
+        except TypeError:
+            return JsonResponse({'error': 'Invalid longitude or latitude'}, status=400)
+
         if check_lon_lat(longitude, latitude):
             point.geom = geos.Point(longitude, latitude)
         else:
@@ -494,6 +497,7 @@ def filter_features(request, map_id):
         'geom': feature_to_geojson(features, True),
     }, status=200)
 
+
 # MARK: - Collaboration APIs
 
 def add_collaborator(request, map_id):
@@ -609,7 +613,8 @@ def feature_to_geojson(feature, param_as_list=False):
     :param feature:
     :return:
     """
-    return serialize('geojson', feature if type(feature) == QuerySet or param_as_list else [feature], geometry_field='geom', fields=models.GEOJSON_PROPERTY_FIELDS)
+    return serialize('geojson', feature if type(feature) == QuerySet or param_as_list else [feature],
+                     geometry_field='geom', fields=models.GEOJSON_PROPERTY_FIELDS)
 
 
 # MARK: - Authentication related helper functions
