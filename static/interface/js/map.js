@@ -191,7 +191,7 @@ function hideDeleteOption(deleteContainerId) {
     $("#" + deleteContainerId).fadeOut(100);
 }
 
-let page = 0;
+let page = 1;
 let pagination = new Pagination([],
     6,
     updatePageEntries,
