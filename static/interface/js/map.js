@@ -215,7 +215,7 @@ function updateFeatureList() {
                 let feature = userFeatureLayer.getLayers()[i].feature;
                 let name = feature.properties.name;
                 let description = feature.properties.description;
-                let id = feature.properties.id;
+                let id = feature.properties.pk;
                 let type = feature.geometry.type;
                 let creator = feature.properties.creator;
                 let created_at = feature.properties.created_at;
@@ -267,31 +267,7 @@ function searchEntryIdBuilder(id) {
 }
 
 function addSearchResultEntry(feature) {
-    /*
-    A feature object looks like:
-    {
-        name: name,
-        description: description,
-        id: id,
-        type: type,
-        creator: creator,
-        created_at: created_at
-    }
-     */
-    // let featureListItem = `
-    //                 <div class="list-group-item list-group-item-action flex-column align-items-start">
-    //                     <div class="d-flex w-100 justify-content-between">
-    //                         <h5 class="mb-1">${feature.name}</h5>
-    //                         <small>${feature.type}</small>
-    //                     </div>
-    //                     <p class="mb-1">${feature.description}</p>
-    //                     <small>${feature.creator}</small>
-    //                     <div class="d-flex justify-content-between">
-    //                         <button class="btn btn-primary" onclick="showFeature(${feature.id})">Show</button>
-    //                         <button class="btn btn-danger" onclick="deleteFeature(${feature.id})">Delete</button>
-    //                     </div>
-    //                 </div>`;
-
+    let infoUpdateFunctionName = feature.type === 'Point' ? 'updatePoint' : 'updatePolyline';
     let featureListItem = `
         <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry" onclick="poiSpotlight(${feature.id})">
             <div class="row align-items-center">
@@ -303,8 +279,12 @@ function addSearchResultEntry(feature) {
                 + `
                 </div>
                 <div class="feature-detail col-9">
-                    <span class="poi-name">${feature.name}</span>
-                    <span class="poi-description text-truncate text-muted">${feature.description === null ? 'No description' : feature.description}</span>
+                    <input id="feature-name-input-${feature.id}" class="form-control form-control-plaintext pb-1" value="${feature.name}" 
+                        onkeyup='${infoUpdateFunctionName}("${feature.id}", $(this).val())'
+                    />
+                    <input id="feature-description-input-${feature.id}" class="form-control form-control-plaintext text-muted pt-0 pb-1" value="${feature.description ? feature.description : ''}"  
+                        onkeyup='${infoUpdateFunctionName}("${feature.id}", undefined, $(this).val())' placeholder="No description"
+                    />
                 </div>
                 <div class="feature-operation col-1">
                     &cross;
