@@ -157,13 +157,20 @@ input[type=number] {
     background-color: rgba(95, 116, 130, 0.2);
 }
 
-.poi-name {
-    font-weight: bold;
-    display: inline-block;
-    float: left;
+.poi-icon {
+    width: 24px;
+    height: 24px;
 }
 
-.poi-address {
+.poi-name {
+    font-weight: bold;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.poi-description {
     display: block;
     white-space: nowrap;
     overflow: hidden;

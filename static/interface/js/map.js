@@ -192,17 +192,52 @@ function hideDeleteOption(deleteContainerId) {
 }
 
 let page = 0;
-let pagination = undefined;
-
+let pagination = new Pagination([],
+    6,
+    updatePageEntries,
+    updatePageNumbers,
+    () => clearInnerAndShowSpinner('poi-list', false));
 
 function updateFeatureList() {
     let keyword = $('#search-input').val();
 
+    let url = keyword === '' ? featureListUrlBuilder(-1, -1) : filteredFeatureListUrlBuilder(keyword, -1, -1);
+
     $.ajax({
-        url: featureListUrlBuilder(-1, -1),
+        url: url,
         type: 'GET',
         success: function (data) {
             loadGeoJSON(JSON.parse(data.geom));
+
+            // Add features to ToC
+            let entries = [];
+            for (let i = 0; i < userFeatureLayer.getLayers().length; i++) {
+                let feature = userFeatureLayer.getLayers()[i].feature;
+                let name = feature.properties.name;
+                let description = feature.properties.description;
+                let id = feature.properties.id;
+                let type = feature.geometry.type;
+                let creator = feature.properties.creator;
+                let created_at = feature.properties.created_at;
+
+                let featureEntry = {
+                    name: name,
+                    description: description,
+                    id: id,
+                    type: type,
+                    creator: creator,
+                    created_at: created_at
+                };
+
+                entries.push(featureEntry);
+            }
+
+            // Sort features by creation time, the create_at property is a standard ISO 8601 date string
+            entries.sort((a, b) => {
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+
+            pagination.setData(entries);
         },
         error: function (data) {
             showErrorToastAjax(data, 'failed loading features');
@@ -231,28 +266,55 @@ function searchEntryIdBuilder(id) {
     return "search-entry-" + id;
 }
 
-function addSearchResultEntry(id, name, additionalInfo, address, page = 0) {
-    let additionalTooltip = "";
-    if (additionalInfo) {
-        let ratingStr = additionalInfo.rating ? "Rating: " + additionalInfo.rating + " / 5" : "";
-        let costStr = additionalInfo.cost ? "Avg Cost: " + additionalInfo.cost : "";
-        let additionalSeparator = additionalInfo.rating !== null && additionalInfo.cost !== null ? "<br>" : "";
-        additionalTooltip = ratingStr + additionalSeparator + costStr;
-    } else {
-        additionalTooltip = "No additional info";
+function addSearchResultEntry(feature) {
+    /*
+    A feature object looks like:
+    {
+        name: name,
+        description: description,
+        id: id,
+        type: type,
+        creator: creator,
+        created_at: created_at
     }
-    let addressToolTip = "";
-    if (address.length > 14) {
-        addressToolTip = `data-bs-toggle="tooltip" data-bs-placement="bottom" title="${address}"`;
-    }
-    document.getElementById("poi-list").innerHTML +=
-        `<li id="${searchEntryIdBuilder(id)}" class="poi-entry" onclick="poiSpotlight(${id})" 
-        data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="" 
-                data-bs-original-title="${additionalTooltip}">
-            <span class="poi-name text-truncate">${name}</span>
-            <br>
-            <span class="poi-address text-truncate">${address}</span>
-        </li>`;
+     */
+    // let featureListItem = `
+    //                 <div class="list-group-item list-group-item-action flex-column align-items-start">
+    //                     <div class="d-flex w-100 justify-content-between">
+    //                         <h5 class="mb-1">${feature.name}</h5>
+    //                         <small>${feature.type}</small>
+    //                     </div>
+    //                     <p class="mb-1">${feature.description}</p>
+    //                     <small>${feature.creator}</small>
+    //                     <div class="d-flex justify-content-between">
+    //                         <button class="btn btn-primary" onclick="showFeature(${feature.id})">Show</button>
+    //                         <button class="btn btn-danger" onclick="deleteFeature(${feature.id})">Delete</button>
+    //                     </div>
+    //                 </div>`;
+
+    let featureListItem = `
+        <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry" onclick="poiSpotlight(${feature.id})">
+            <div class="row align-items-center">
+                <div class="feature-icon col-1 me-2">
+                ` +
+                (feature.type === "Point" ? `<img class="poi-icon" src="${markerBtnIcon}" alt="point feature">` :
+                    feature.type === "LineString" ? `<img class="poi-icon" src="${lineBtnIcon}" alt="line feature">` :
+                        '?')
+                + `
+                </div>
+                <div class="feature-detail col-9">
+                    <span class="poi-name">${feature.name}</span>
+                    <span class="poi-description text-truncate text-muted">${feature.description === null ? 'No description' : feature.description}</span>
+                </div>
+                <div class="feature-operation col-1">
+                    &cross;
+                </div>
+            </div>
+        </div>
+        </li>
+    `;
+
+    document.getElementById("poi-list").innerHTML += featureListItem;
 }
 
 function clearSearchResult() {
@@ -355,18 +417,7 @@ function updatePageEntries(entries) {
         document.getElementById("poi-list").innerHTML = "<div class='text-center text-muted m-3'>No results found</div>";
     } else {
         // Show new entries
-        entries.forEach(poi => {
-            addSearchResultEntry(poi.id, poi.name, poi.additional_info, poi.address);
-
-            // Populate marker on map
-            let marker = createMarker(poi, false);
-
-            // Add to cached list
-            onDisplayDataList.push({
-                'marker': marker,
-                'poi': poi
-            });
-        });
+        entries.forEach(feature => addSearchResultEntry(feature));
 
         enableTooltip();
     }

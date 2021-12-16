@@ -1,21 +1,63 @@
+/**
+ * Paginating for local data
+ */
 class Pagination {
-    entriesPerPage;
-    fullList = [];
-    
-    get maximumPageIndex() {
-        return Math.ceil(this.fullList.length / this.entriesPerPage) - 1;
+    limit;
+    #beforeLoadPage;
+    #showPage;
+    #updatePageIndex;
+    #currentPage = null;
+
+    #records = [];
+
+    constructor(records, limit, showPage, updatePageIndex, beforeLoadPage) {
+        this.#records = records;
+        this.limit = limit;
+        this.#beforeLoadPage = beforeLoadPage;
+        this.#showPage = showPage;
+        this.#updatePageIndex = updatePageIndex;
     }
-    
-    constructor(entriesPerPage, fullList) {
-        this.entriesPerPage = entriesPerPage;
-        this.fullList = fullList;
+
+    get totalRecords() {
+        return this.#records.length;
     }
-    
-    getDisplayEntries(page) {
-        let lastIndex = this.fullList.length - 1;
-        let startIndex = Math.min(page * this.entriesPerPage, lastIndex);
-        let endIndex = Math.min(Math.max(0, startIndex + this.entriesPerPage - 1), lastIndex);
-        
-        return this.fullList.slice(startIndex, endIndex);
+
+    get totalPages() {
+        return this.totalRecords <= 1 ? 1 : Math.ceil(this.totalRecords / this.limit);
+    }
+
+    reloadPage() {
+        if (this.#currentPage === null) {
+            this.loadPage(1);
+        } else {
+            this.loadPage(this.#currentPage);
+        }
+    }
+
+    loadPage(page) {
+        this.#currentPage = page;
+        this.#beforeLoadPage();
+
+        this.#showPage(this.#records.slice((page - 1) * this.limit, page * this.limit));
+        this.#updatePageIndex();
+    }
+
+    appendData(record) {
+        this.#records.push(record);
+        this.reloadPage();
+    }
+
+    insertData(record, index) {
+        this.#records.splice(index, 0, record);
+        this.reloadPage();
+    }
+
+    setData(records) {
+        this.#records = records;
+        this.reloadPage();
+    }
+
+    getData() {
+        return this.#records;
     }
 }

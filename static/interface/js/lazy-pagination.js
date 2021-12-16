@@ -1,3 +1,6 @@
+/**
+ * For lazy loading of pagination.
+ */
 class LazyPagination {
     totalRecords = -1;
     limit;

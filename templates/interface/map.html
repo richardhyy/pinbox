@@ -12,7 +12,7 @@
 
     <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.js' %}"></script>
     <script src="{% static 'interface/libs/leaflet/leaflet.js' %}"></script>
-    <script src="{% static 'interface/js/lazy-pagination.js' %}"></script>
+    <script src="{% static 'interface/js/pagination.js' %}"></script>
     <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
     <script src="{% static 'libs/jquery-ui/jquery-ui.js' %}"></script>
 
@@ -81,6 +81,9 @@
             shadowAnchor: [13, 40],
             popupAnchor: [0, -45]
         });
+
+        const markerBtnIcon = '{% static 'interface/images/marker.png' %}';
+        const lineBtnIcon = '{% static 'interface/images/polyline.png' %}';
     </script>
 </head>
 
@@ -151,7 +154,7 @@
             <div class="search-bar mb-1"><input id="search-input" class="text-input" type="text"
                                                 placeholder="Search..."/></div>
             <div id="search-result" class="entry-list" style="overflow-y: auto">
-                <ul id="poi-list">
+                <ul id="poi-list" class="container align-items-center">
                 </ul>
             </div>
             <div id="pagination-control" class="d-flex justify-content-between">

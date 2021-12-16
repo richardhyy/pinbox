@@ -57,6 +57,7 @@ let userFeatureLayer = L.geoJSON(null, {
                 .openOn(map);
         });
 
+
     },
     style: genericFeatureStyle
 });
@@ -97,22 +98,6 @@ function loadGeoJSON(geojson, append = false) {
     }
     userFeatureLayer.addData(geojson);
 
-    // // register enter key event for each input
-    // for (let i = 0; i < userFeatureLayer.getLayers().length; i++) {
-    //     let feature = userFeatureLayer.getLayers()[i].feature;
-    //     let elementId = `feature-name-input-${feature.properties.pk}`;
-    //     let input = document.getElementById(elementId);
-    //     if (input) {
-    //         let featureType = feature.geometry.type;
-    //         registerEnterKeyEvent("#" + elementId, () => {
-    //             if (featureType === "Point") {
-    //                 updatePoint(feature.properties.pk, input.value);
-    //             } else {
-    //                 updatePolyline(feature.properties.pk, input.value);
-    //             }
-    //         });
-    //     }
-    // }
 }
 
 
