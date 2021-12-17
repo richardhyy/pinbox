@@ -289,7 +289,8 @@ function addSearchResultEntry(feature) {
     let infoUpdateFunctionName = feature.type === 'Point' ? 'updatePoint' : 'updatePolyline';
     let featureListItem = `
         <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry">
-            <div class="row align-items-center">
+            <div class="row align-items-center" onmouseenter="showDeleteOption('feature-delete-btn-${feature.id}')" 
+                                                onmouseleave="hideDeleteOption('feature-delete-btn-${feature.id}')">
                 <div class="feature-icon col-1 me-2" onclick="poiSpotlight(${feature.id}, '${feature.type}')">
                 ` +
                 (feature.type === "Point" ? `<img class="poi-icon" src="${markerBtnIcon}" alt="point feature">` :
@@ -306,7 +307,8 @@ function addSearchResultEntry(feature) {
                     />
                 </div>
                 <div class="feature-operation col-1">
-                    &cross;
+                    <a tabindex="-1" id="feature-delete-btn-${feature.id}" class="btn lh-1" style="color: #d73030; display: none;" data-bs-toggle="popover"
+                    data-bs-trigger="focus" data-bs-content="<button class='btn text-danger' onclick='deleteFeature(${feature.id}, \`${feature.type}\`)'>Confirm?</button>">&cross;</a>
                 </div>
             </div>
         </div>
@@ -361,6 +363,14 @@ function updatePolyline(id, name, description = undefined) {
             showErrorToastAjax(data, 'failed updating polyline');
         }
     });
+}
+
+function deleteFeature(id, geoemtryType) {
+    if (geoemtryType === "Point") {
+        deletePoint(id);
+    } else if (geoemtryType === "LineString") {
+        deletePolyline(id);
+    }
 }
 
 function deletePoint(id) {
@@ -419,6 +429,7 @@ function updatePageEntries(entries) {
         entries.forEach(feature => addSearchResultEntry(feature));
 
         enableTooltip();
+        enableDismissablePopover(false);
     }
 }
 
