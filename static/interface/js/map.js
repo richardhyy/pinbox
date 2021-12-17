@@ -451,7 +451,9 @@ function poiSpotlight(id, geometryType) {
                     padding: [50, 50]
                 });
             }
-            let onPage = pagination.getPageNumberForRecord(id.toString());
+            let onPage = pagination.getPageNumberForRecord((record) => {
+                return record.id === id && record.type === geometryType;
+            });
             changePage(onPage);
 
             if (previousSpotlight.page === onPage && previousSpotlight.id !== undefined) {

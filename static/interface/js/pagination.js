@@ -46,10 +46,10 @@ class Pagination {
         this.#updatePageIndex();
     }
 
-    getPageNumberForRecord(id) {
+    getPageNumberForRecord(condition) {
         for (let i = 0; i < this.totalPages; i++) {
             const page = this._getPageEntries(i + 1);
-            if (page.find(record => record.id === id) !== undefined) {
+            if (page.find(record => condition(record)) !== undefined) {
                 return i + 1;
             }
         }
