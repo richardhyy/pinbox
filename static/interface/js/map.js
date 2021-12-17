@@ -1,3 +1,5 @@
+let editable = false;
+
 function fetchMapDetail(onSuccess) {
     $.ajax({
         url: mapDetailsUrl,
@@ -309,6 +311,7 @@ fetchMapDetail((data) => {
 
     if (data.owner === viewerUsername || data.collaborators.includes(viewerUsername)) {
         $('.non-editing-area').hide();
+        editable = true;
     } else {
         $('.editing-area').hide();
     }
@@ -347,12 +350,13 @@ function addSearchResultEntry(feature) {
                     <input id="feature-description-input-${feature.id}" class="form-control form-control-plaintext text-muted pt-0 pb-1" value="${feature.description ? feature.description : ''}"  
                         onkeyup='${infoUpdateFunctionName}("${feature.id}", undefined, $(this).val())' placeholder="No description"
                     />
-                </div>
-                <div class="feature-operation col-1">
+                </div>` +
+        (editable ?
+                `<div class="feature-operation col-1">
                     <a tabindex="-1" id="feature-delete-btn-${feature.id}" class="btn lh-1" style="color: #d73030; display: none;" data-bs-toggle="popover"
                     data-bs-trigger="focus" data-bs-content="<button class='btn text-danger' onclick='deleteFeature(${feature.id}, \`${feature.type}\`)'>Confirm?</button>">&cross;</a>
-                </div>
-            </div>
+                </div>` : '') +
+            `</div>
         </div>
         </li>
     `;
