@@ -32,5 +32,6 @@ urlpatterns = [
     path('collaboration/collaborator/add/<int:map_id>', views.add_collaborator, name='add_collaborator'),
     path('collaboration/collaborator/remove/<int:map_id>', views.remove_collaborator, name='remove_collaborator'),
     path('collaboration/collaborator/list/<int:map_id>', views.get_collaborators, name='get_collaborators'),
-
+    path('collaboration/session/cursor/list/<int:map_id>', views.get_cursor_positions, name='get_cursor_positions'),
+    path('collaboration/session/cursor/set/<int:map_id>', views.set_cursor_position, name='set_cursor_position'),
 ]

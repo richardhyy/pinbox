@@ -249,19 +249,49 @@ class MapViewTests(TestCase):
                                     })
         self.assertIs(response.status_code, 200)
 
+        # Set cursor
+        response = self.client.post(reverse('api:set_cursor_position', kwargs={'map_id': map_id}),
+                                    {
+                                        'longitude': 123.456,
+                                        'latitude': 67.89,
+                                    })
+        self.assertIs(response.status_code, 200)
+
+        # Get cursor
+        response = self.client.get(reverse('api:get_cursor_positions', kwargs={'map_id': map_id}))
+        # Should not contain the current viewer's cursor
+        self.assertNotContains(response, '123.456', status_code=200)
+
+        # Update cursor
+        response = self.client.post(reverse('api:set_cursor_position', kwargs={'map_id': map_id}),
+                                    {
+                                        'longitude': 54.32,
+                                        'latitude': -12.34,
+                                    })
+        self.assertIs(response.status_code, 200)
+
         # Logout owner and login collaborator
         self.client.logout()
         self.client.login(username=self.collaborator_username, password=self.collaborator_password)
 
+        # Get cursor as collaborator
+        response = self.client.get(reverse('api:get_cursor_positions', kwargs={'map_id': map_id}))
+        self.assertContains(response, '54.32', status_code=200)
+
+        # Update cursor as collaborator
+        response = self.client.post(reverse('api:set_cursor_position', kwargs={'map_id': map_id}),
+                                    {
+                                        'longitude': -65.43,
+                                        'latitude': -34.12,
+                                    })
+        self.assertIs(response.status_code, 200)
+
         # Collaborator can see map
         response = self.client.get(reverse('api:get_shared_maps'))
         self.assertContains(response, 'test_map', status_code=200)
-        # Collaborator can see points
-        response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
+        # Collaborator can see features
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
         self.assertContains(response, '67.89', status_code=200)
-        # Collaborator can see lines
-        response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
-        self.assertContains(response, '2.0, 2.0', status_code=200)
         # Collaborator can see map's metadata
         response = self.client.get(reverse('api:get_map_detail', kwargs={'map_id': map_id}))
         self.assertContains(response, 'test_map', status_code=200)
@@ -293,10 +323,8 @@ class MapViewTests(TestCase):
         self.client.login(username=self.username, password=self.password)
 
         # Map owner can see collaborator's features
-        response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
         self.assertContains(response, '65.43', status_code=200)
-        response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
-        self.assertContains(response, '6.0, 6.0', status_code=200)
         # Map owner can delete collaborator's features
         response = self.client.get(reverse('api:delete_point', kwargs={'map_id': map_id, 'point_id': 2}))
         self.assertEqual(response.status_code, 200)

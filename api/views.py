@@ -592,6 +592,64 @@ def get_collaborators(request, map_id):
     }, status=200)
 
 
+def get_cursor_positions(request, map_id):
+    """
+    Get cursor positions of a map
+    :param request:
+    :param map_id:
+    :return:
+    """
+    try:
+        map = get_map_if_authenticated(request.user, map_id)
+    except AccessError as e:
+        return JsonResponse({'error': e.message}, status=e.status_code)
+
+    cursors = models.Cursor.objects.filter(Q(map=map) & ~Q(user=request.user))
+
+    return JsonResponse({
+        'cursors': [{'user': cursor.user.username, 'longitude': cursor.longitude, 'latitude': cursor.latitude} for cursor in cursors if not cursor.is_expired]
+    }, status=200)
+
+
+def set_cursor_position(request, map_id):
+    """
+    Set cursor position of a map
+    :param request:
+    :param map_id:
+    :return:
+    """
+    try:
+        map = get_map_if_authenticated(request.user, map_id)
+    except AccessError as e:
+        return JsonResponse({'error': e.message}, status=e.status_code)
+
+    if not map.can_edit(request.user):
+        return JsonResponse({'error': 'You are not allowed to set cursor positions on this map'}, status=403)
+
+    try:
+        longitude = float(request.POST.get('longitude', None))
+        latitude = float(request.POST.get('latitude', None))
+    except ValueError:
+        return JsonResponse({'error': 'Invalid longitude or latitude'}, status=400)
+
+    if not check_lon_lat(longitude, latitude):
+        return JsonResponse({'error': 'Invalid longitude or latitude'}, status=400)
+
+    cursor = models.Cursor.objects.filter(map=map, user=request.user).first()
+    if cursor:
+        # Update existing cursor
+        cursor.timestamp = timezone.now()
+    else:
+        # Create new cursor
+        cursor = models.Cursor(map=map, user=request.user)
+
+    cursor.longitude = longitude
+    cursor.latitude = latitude
+    cursor.save()
+
+    return JsonResponse({'status': 'ok'}, status=200)
+
+
 # MARK: - Generic helper functions
 
 def get_default_name(base_name):
