@@ -237,7 +237,26 @@ function updateFeatureList() {
                 return new Date(b.created_at) - new Date(a.created_at);
             });
 
-            pagination.setData(entries);
+            let _tempPagination = new Pagination(entries,
+                pagination.limit,
+                () => {},
+                () => {},
+                () => {});
+            let newPageEntries = _tempPagination._getPageEntries(page);
+            let currentPageEntries = pagination._getPageEntries(page);
+
+            // Compare the new page entries with the current page entries
+            // If they are the same, do nothing
+            if (newPageEntries.length !== currentPageEntries.length) {
+                pagination.setData(entries);
+            } else {
+                for (let i = 0; i < newPageEntries.length; i++) {
+                    if (newPageEntries[i].id !== currentPageEntries[i].id) {
+                        pagination.setData(entries);
+                        break;
+                    }
+                }
+            }
         },
         error: function (data) {
             showErrorToastAjax(data, 'failed loading features');
@@ -269,9 +288,9 @@ function searchEntryIdBuilder(id) {
 function addSearchResultEntry(feature) {
     let infoUpdateFunctionName = feature.type === 'Point' ? 'updatePoint' : 'updatePolyline';
     let featureListItem = `
-        <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry" onclick="poiSpotlight(${feature.id})">
+        <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry">
             <div class="row align-items-center">
-                <div class="feature-icon col-1 me-2">
+                <div class="feature-icon col-1 me-2" onclick="poiSpotlight(${feature.id})">
                 ` +
                 (feature.type === "Point" ? `<img class="poi-icon" src="${markerBtnIcon}" alt="point feature">` :
                     feature.type === "LineString" ? `<img class="poi-icon" src="${lineBtnIcon}" alt="line feature">` :
@@ -415,6 +434,11 @@ function changePage(target) {
 
 // MARK: - POI Spotlight related
 
+let previousSpotlight = {
+    page: undefined,
+    id: undefined
+}
+
 function poiSpotlight(id) {
     // Iterate over currently on screen POIs and zoom to the one with expected ID
     for (let i = 0; i < userFeatureLayer.getLayers().length; i++) {
@@ -427,7 +451,19 @@ function poiSpotlight(id) {
                     padding: [50, 50]
                 });
             }
-            changePage(pagination.getPageForRecord(id.toString()));
+            let onPage = pagination.getPageNumberForRecord(id.toString());
+            changePage(onPage);
+
+            if (previousSpotlight.page === onPage && previousSpotlight.id !== undefined) {
+                // Remove previous spotlight
+                $('#' + searchEntryIdBuilder(previousSpotlight.id)).removeClass('poi-entry-selected');
+            }
+            // Highlight selected entry
+            $('#' + searchEntryIdBuilder(id)).addClass('poi-entry-selected');
+
+            previousSpotlight.page = onPage;
+            previousSpotlight.id = id;
+
             break;
         }
     }
