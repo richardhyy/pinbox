@@ -18,18 +18,6 @@ let userFeatureLayer = L.geoJSON(null, {
         });
     },
     onEachFeature: function (feature, layer) {
-
-        let nameUpdateFunctionName = feature.geometry.type === 'Point' ? 'updatePoint' : 'updatePolyline';
-        let descriptionHtml = feature.properties.description ? '<p class="text-muted">' + feature.properties.description + '</p>' : "";
-        layer.bindPopup(`
-                    <div class="marker-popup-container">
-                        <input id="feature-name-input-${feature.properties.pk}" class="form-control form-control-plaintext" value="${feature.properties.name}" 
-                        onkeyup='
-                        ${nameUpdateFunctionName}("${feature.properties.pk}", $(this).val());
-                        '
-                        />
-                    </div>
-                `).openPopup();
         layer.bindTooltip(feature.properties.name, {
             permanent: true,
             direction: 'bottom',
@@ -37,32 +25,8 @@ let userFeatureLayer = L.geoJSON(null, {
             className: 'feature-label',
         });
         layer.on('click', function (e) {
-            poiSpotlight(feature.properties.pk);
+            poiSpotlight(feature.properties.pk, feature.geometry.type);
         });
-        // layer.on('contextmenu', function (e) {
-        //     let featureType = feature.geometry.type;
-        //     let deleteFunctionName = featureType === "Point" ? "deletePoint" : "deletePolyline";
-        //     deletePopup
-        //         .setContent(`
-        //                     <div class="marker-popup-container">
-        //                         <h5>Delete ${feature.properties.name}?</h5>
-        //                         <a class="btn btn-outline-secondary" id="delete-feature-${feature.properties.pk}"
-        //                                onclick="
-        //                                        requireConfirm(
-        //                                        'delete-feature-${feature.properties.pk}',
-        //                                        () => {
-        //                                            ${deleteFunctionName}(${feature.properties.pk});
-        //                                            map.closePopup();
-        //                                        })"
-        //                                data-bs-toggle="tooltip" data-bs-placement="bottom"
-        //                                title="Can NOT be undone">
-        //                                 Delete</a>
-        //                     </div>`)
-        //         .setLatLng(e.latlng)
-        //         .openOn(map);
-        // });
-
-
     },
     style: genericFeatureStyle
 });

@@ -290,7 +290,7 @@ function addSearchResultEntry(feature) {
     let featureListItem = `
         <li id="${searchEntryIdBuilder(feature.id)}" class="poi-entry">
             <div class="row align-items-center">
-                <div class="feature-icon col-1 me-2" onclick="poiSpotlight(${feature.id})">
+                <div class="feature-icon col-1 me-2" onclick="poiSpotlight(${feature.id}, '${feature.type}')">
                 ` +
                 (feature.type === "Point" ? `<img class="poi-icon" src="${markerBtnIcon}" alt="point feature">` :
                     feature.type === "LineString" ? `<img class="poi-icon" src="${lineBtnIcon}" alt="line feature">` :
@@ -439,11 +439,11 @@ let previousSpotlight = {
     id: undefined
 }
 
-function poiSpotlight(id) {
+function poiSpotlight(id, geometryType) {
     // Iterate over currently on screen POIs and zoom to the one with expected ID
     for (let i = 0; i < userFeatureLayer.getLayers().length; i++) {
         let feature = userFeatureLayer.getLayers()[i].feature;
-        if (feature.properties.pk === id.toString()) {
+        if (feature.properties.pk === id.toString() && feature.geometry.type === geometryType) {
             if (feature.geometry.type === "Point") {
                 map.flyTo(L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]), 18);
             } else if (feature.geometry.type === "LineString") {
