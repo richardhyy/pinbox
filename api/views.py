@@ -160,7 +160,7 @@ def update_map(request, map_id):
     if collaborators:
         map.collaborators.set(models.User.objects.filter(username__in=collaborators))
     if public:
-        map.public = True
+        map.public = public == 'true'
     if base_map:
         try:
             _requested_base_map = models.BaseMap.objects.get(id=base_map)
