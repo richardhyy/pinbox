@@ -90,6 +90,8 @@ class CursorTool extends MapEditorTool {
 }
 
 class MarkerTool extends MapEditorTool {
+    #lastClicked = null;
+
     setEnabled() {
         super.setEnabled();
 
@@ -101,6 +103,12 @@ class MarkerTool extends MapEditorTool {
     }
 
     onClick(e) {
+        // Timeout
+        if (this.#lastClicked && this.#lastClicked + 500 > Date.now()) {
+            return;
+        }
+        this.#lastClicked = Date.now();
+
         console.log(e);
 
         let latlng = e.latlng;
