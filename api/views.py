@@ -119,10 +119,15 @@ def create_map(request):
 
     description = request.POST.get('description', None)
 
+    first_base_map = models.BaseMap.objects.first()
+    if not first_base_map:
+        return JsonResponse({'error': 'No base map found. Please contact the administrator.'}, status=500)
+
     map = models.Map(
         owner=request.user,
         name=name,
         description=description,
+        base_map=first_base_map
     )
     map.save()
 
