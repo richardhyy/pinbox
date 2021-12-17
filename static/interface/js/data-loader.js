@@ -1,7 +1,6 @@
 const genericFeatureStyle = {
     color: '#7ebbae',
-    weight: 3,
-    fillColor: '#ffffff',
+    weight: 5,
 };
 
 // MARK: - Basic map
