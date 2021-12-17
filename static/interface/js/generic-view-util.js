@@ -74,9 +74,10 @@ function showErrorToastAjax(error, defaultMessage) {
     let message = '';
     console.log(error.responseText);
     try {
-        let error = JSON.parse(data.responseText);
-        message = error.error;
+        let err = JSON.parse(error.responseText);
+        message = err.error;
     } catch (e) {
+        console.log(e);
         message = defaultMessage;
     }
     showErrorToast(message);
