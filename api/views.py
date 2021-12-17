@@ -520,7 +520,7 @@ def add_collaborator(request, map_id):
         return JsonResponse({'error': 'You are not allowed to add collaborators to this map'}, status=403)
 
     # Target user should not be the owner of the map
-    if map.created_by.username == username:
+    if map.owner.username == username:
         return JsonResponse({'error': 'You cannot add yourself as a collaborator'}, status=400)
 
     try:
@@ -544,9 +544,9 @@ def remove_collaborator(request, map_id):
     :param map_id:
     :return:
     """
-    username = request.POST.get('username', None)
-    if not username:
-        return JsonResponse({'error': 'Username is required'}, status=400)
+    id = request.POST.get('id', None)
+    if not id:
+        return JsonResponse({'error': 'ID is required'}, status=400)
 
     try:
         map = get_map_if_authenticated(request.user, map_id)
@@ -557,7 +557,7 @@ def remove_collaborator(request, map_id):
         return JsonResponse({'error': 'You are not allowed to remove collaborators from this map'}, status=403)
 
     try:
-        user = models.User.objects.get(username=username)
+        user = models.User.objects.get(id=id)
     except models.User.DoesNotExist:
         return JsonResponse({'error': 'User does not exist'}, status=404)
 
@@ -583,7 +583,7 @@ def get_collaborators(request, map_id):
         return JsonResponse({'error': e.message}, status=e.status_code)
 
     return JsonResponse({
-        'collaborators': [collaborator.username for collaborator in map.collaborators.all()]
+        'collaborators': [{'id': collaborator.id, 'username': collaborator.username} for collaborator in map.collaborators.all()]
     }, status=200)
 
 

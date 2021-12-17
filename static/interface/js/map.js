@@ -67,20 +67,21 @@ function updateCollaboratorList() {
                     for (let i = 0; i < data.collaborators.length; i++) {
                         let collaborator = data.collaborators[i];
                         let collaboratorElement = $('<label class="list-group-item d-flex justify-content-between p-3 align-content-center" ' +
-                            `onmouseenter="showDeleteOption('delete-btn-${key.id}')" 
-                            onmouseleave="hideDeleteOption('delete-btn-${key.id}')"
+                            `onmouseenter="showDeleteOption('collaborator-delete-btn-${collaborator.id}')" 
+                            onmouseleave="hideDeleteOption('collaborator-delete-btn-${collaborator.id}')"
                             ></label>`);
                         collaboratorElement.append(`
                             <span class="m-2">
-                                ${collaborator.name}
+                                ${collaborator.username}
                             </span>`);
                         collaboratorElement.append('<span">' +
                             `
-                            <a tabindex="-1" id="delete-btn-${key.id}" class="btn lh-1" style="color: #d73030" 
-                            data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="<button class='btn text-danger' onclick='removeCollaborator(${key.id})'>Confirm?</button>">&cross;</a>
+                            <a tabindex="-1" id="collaborator-delete-btn-${collaborator.id}" class="btn lh-1" style="color: #d73030" 
+                            data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="<button class='btn text-danger' onclick='removeCollaborator(${collaborator.id})'>Confirm?</button>">&cross;</a>
                             ` +
                             '</span>');
-                        collaboratorList.append(keyElement);
+                        collaboratorList.append(collaboratorElement);
+                        hideDeleteOption('collaborator-delete-btn-' + collaborator.id);
                     }
                     enableTooltip();
                     enableDismissablePopover(false);
@@ -96,7 +97,7 @@ function updateCollaboratorList() {
 function addCollaborator(username) {
     showProcessingToast();
     $.ajax({
-        url: usernameCheckUrl,
+        url: addCollaboratorUrl,
         type: 'POST',
         headers: {
             'X-CSRFToken': csrftoken
@@ -105,18 +106,35 @@ function addCollaborator(username) {
             'username': username
         },
         success: function (data) {
-            if (data.exists) {
-                $('#collaborator-list').append(`
-                        <label class="list-group-item d-flex justify-content-between p-3 align-content-center">
-                            <span class="m-2">${username}</span>
-                            <span class="badge bg-success rounded-pill p-2 m-2">${data.message}</span>
-                        </label>`);
-            } else {
-                showErrorToast("User not found");
-            }
+            updateCollaboratorList();
         },
         error: function (data) {
             showErrorToastAjax(data, 'failed checking collaborator');
+        }
+    });
+}
+
+function removeCollaborator(id) {
+    showProcessingToast();
+    $.ajax({
+        url: removeCollaboratorUrl,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'id': id
+        },
+        success: function (data) {
+            if (data.status) {
+                $('#collaborator-list').empty();
+                updateCollaboratorList();
+            } else {
+                showErrorToast("Failed removing collaborator");
+            }
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed removing collaborator');
         }
     });
 }
