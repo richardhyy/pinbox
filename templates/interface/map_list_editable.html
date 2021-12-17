@@ -98,13 +98,15 @@
         loadEditableMapList(
             '{% url 'api:get_private_maps' %}',
             '{% url 'interface:map' 0 %}'.substr(0, '{% url 'interface:map' 0 %}'.length - 1),
-            'private-map-list'
+            'private-map-list',
+            'No private maps found.'
         );
         // Load shared maps
         loadEditableMapList(
             '{% url 'api:get_shared_maps' %}',
             '{% url 'interface:map' 0 %}'.substr(0, '{% url 'interface:map' 0 %}'.length - 1),
-            'shared-map-list'
+            'shared-map-list',
+            'No shared maps found.'
         );
     </script>
 {% endblock %}

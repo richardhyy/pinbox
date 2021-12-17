@@ -1,4 +1,4 @@
-function loadEditableMapList(url, map_base_url, targetDivId) {
+function loadEditableMapList(url, map_base_url, targetDivId, noMapMessage = 'No maps found.') {
     clearInnerAndShowSpinner(targetDivId);
 
     $.ajax({
@@ -9,7 +9,7 @@ function loadEditableMapList(url, map_base_url, targetDivId) {
             let mapList = document.getElementById(targetDivId);
             mapList.innerHTML = '';
             if (data.maps.length === 0) {
-                mapList.innerHTML = '<span>No maps found.</span>';
+                mapList.innerHTML = '<span class="text-muted text-center p-5" style="width: 100%">' + noMapMessage + '</span>';
             } else {
                 for (let map of data.maps) {
                     let _id = map.id;
@@ -85,18 +85,6 @@ function updateMapInfo(id) {
             showErrorToastAjax(data, 'failed updating map information');
         }
     });
-}
-
-function paintGeoPattern(class_name = 'geo-pattern') {
-    let pattern_divs = document.getElementsByClassName(class_name);
-    for (let i = 0; i < pattern_divs.length; i++) {
-        let pattern_div = pattern_divs[i];
-        let pattern_id = pattern_div.id;
-        let pattern_name = pattern_div.innerText;
-        let pattern = GeoPattern.generate(`${pattern_name}#${pattern_id}`);
-        pattern_div.style.backgroundImage = pattern.toDataUrl();
-        pattern_div.innerText = '';
-    }
 }
 
 function createMap(url) {
