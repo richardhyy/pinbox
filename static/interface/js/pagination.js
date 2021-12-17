@@ -34,12 +34,26 @@ class Pagination {
         }
     }
 
+    _getPageEntries(page) {
+        return this.#records.slice((page - 1) * this.limit, page * this.limit);
+    }
+
     loadPage(page) {
         this.#currentPage = page;
         this.#beforeLoadPage();
 
-        this.#showPage(this.#records.slice((page - 1) * this.limit, page * this.limit));
+        this.#showPage(this._getPageEntries(page));
         this.#updatePageIndex();
+    }
+
+    getPageNumberForRecord(id) {
+        for (let i = 0; i < this.totalPages; i++) {
+            const page = this._getPageEntries(i + 1);
+            if (page.find(record => record.id === id) !== undefined) {
+                return i + 1;
+            }
+        }
+        return 1;
     }
 
     appendData(record) {

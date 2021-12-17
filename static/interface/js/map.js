@@ -415,35 +415,20 @@ function changePage(target) {
 
 // MARK: - POI Spotlight related
 
-let lastSpotlightEntryIndex = undefined;
-
 function poiSpotlight(id) {
     // Iterate over currently on screen POIs and zoom to the one with expected ID
-    for (let i = 0; i < onDisplayDataList.length; i++) {
-        if (onDisplayDataList[i].poi.id === id) {
-            let poi = onDisplayDataList[i].poi;
-            let marker = onDisplayDataList[i].marker;
-
-            // Remove normal marker
-            marker.remove();
-            // Add spotlighted marker
-            onDisplayDataList[i].marker = createMarker(poi, true);
-            // Zoom to POI
-            map.setView(new L.LatLng(poi.latitude, poi.longitude), 16);
-
-            // Remove previous spotlighted marker
-            if (lastSpotlightEntryIndex && lastSpotlightEntryIndex !== i) {
-                let lastSpotlightEntry = onDisplayDataList[lastSpotlightEntryIndex];
-                lastSpotlightEntry.marker.remove();
-                lastSpotlightEntry.marker = createMarker(lastSpotlightEntry.poi);
-
-                $('#' + searchEntryIdBuilder(lastSpotlightEntry.poi.id)).removeClass('poi-entry-selected');
+    for (let i = 0; i < userFeatureLayer.getLayers().length; i++) {
+        let feature = userFeatureLayer.getLayers()[i].feature;
+        if (feature.properties.pk === id.toString()) {
+            if (feature.geometry.type === "Point") {
+                map.flyTo(L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]), 18);
+            } else if (feature.geometry.type === "LineString") {
+                map.flyToBounds(userFeatureLayer.getLayers()[i].getBounds(), {
+                    padding: [50, 50]
+                });
             }
-            // Highlight selected entry
-            $('#' + searchEntryIdBuilder(id)).addClass('poi-entry-selected');
-
-            lastSpotlightEntryIndex = i;
-            return;
+            changePage(pagination.getPageForRecord(id.toString()));
+            break;
         }
     }
 }

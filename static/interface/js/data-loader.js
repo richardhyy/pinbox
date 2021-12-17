@@ -36,9 +36,9 @@ let userFeatureLayer = L.geoJSON(null, {
             offset: [0, 8],
             className: 'feature-label',
         });
-        // layer.on('click', function (e) {
-        //     this.openPopup();
-        // });
+        layer.on('click', function (e) {
+            poiSpotlight(feature.properties.pk);
+        });
         // layer.on('contextmenu', function (e) {
         //     let featureType = feature.geometry.type;
         //     let deleteFunctionName = featureType === "Point" ? "deletePoint" : "deletePolyline";
