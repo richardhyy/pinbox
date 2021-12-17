@@ -1,4 +1,5 @@
 let editable = false;
+let cursorUpdateTimer = undefined;
 
 function fetchMapDetail(onSuccess) {
     $.ajax({
@@ -304,6 +305,32 @@ function updateFeatureList() {
     })
 }
 
+function updateCursor() {
+    // Update cursor
+    $.ajax({
+        url: setCursorUrl,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'latitude': mouseCoordinates.lat,
+            'longitude': mouseCoordinates.lng
+        },
+    });
+    // Get cursor list
+    $.ajax({
+        url: cursorListUrl,
+        type: 'GET',
+        success: function (data) {
+            updateCursors(data.cursors);
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed loading cursor list');
+        }
+    });
+}
+
 
 // MARK: - Load base map
 fetchMapDetail((data) => {
@@ -312,6 +339,16 @@ fetchMapDetail((data) => {
     if (data.owner === viewerUsername || data.collaborators.includes(viewerUsername)) {
         $('.non-editing-area').hide();
         editable = true;
+
+        if (cursorUpdateTimer) {
+            clearInterval(cursorUpdateTimer);
+        }
+
+        if (data.collaborators.length > 0) {
+            cursorUpdateTimer = setInterval(() => {
+                updateCursor();
+            }, 1000);
+        }
     } else {
         $('.editing-area').hide();
     }

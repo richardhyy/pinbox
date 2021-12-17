@@ -3,11 +3,16 @@ const genericFeatureStyle = {
     weight: 5,
 };
 
+const cursorColorPalette = ["06bcc1", "5bc0eb", "fde74c", "9bc53d", "6cd4ff", "dcd6f7", "a6b1e1", "b4869f",
+                            "985f6f", "4e4c67", "fcd581", "990d35", "c8e9a0", "e63946","f1faee","a8dadc","457b9d"];
+
 // MARK: - Basic map
 let baseMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 2,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 });
+
+let mouseCoordinates = undefined;
 
 let cursorLayer = L.featureGroup();
 let editableLayer = L.featureGroup();
@@ -47,10 +52,10 @@ L.control.zoom({
     position: 'topright'
 }).addTo(map);
 
-provAndcitylayers = new L.FeatureGroup();
-map.addLayer(provAndcitylayers);
-
-let deletePopup = L.popup();
+// Update mouse coordinates for later use
+map.on('mousemove', function (e) {
+    mouseCoordinates = e.latlng;
+});
 
 function loadBasemap(url, maxZoom, attribution) {
     baseMapLayer.remove();
@@ -76,21 +81,35 @@ let cursorAnimationTimers = {};
 function updateCursors(cursorList) {
     for (const [user, cursor] of Object.entries(cursors)) {
         // If the user is not in the cursorList, remove the cursor from screen
-        if (!cursorList.includes(user)) {
+        let included = false;
+        for (const [id, _newCursor] of Object.entries(cursorList)) {
+            if (user === _newCursor.user) {
+                included = true;
+                break;
+            }
+        }
+        if (!included) {
+            console.log("Removing cursor for user " + user);
             cursorLayer.removeLayer(cursor);
             delete cursors[user];
         }
     }
 
-    for (let cursor of cursorList) {
+    for (i=0; i<cursorList.length; i++) {
+        let cursor = cursorList[i];
+
         let user = cursor.user;
-        let color = cursor.color;
+        let color = i >= cursorColorPalette.length ? cursorColorPalette[i % cursorColorPalette.length] : cursorColorPalette[i];
         let cursorLatLng = L.latLng(cursor.latitude, cursor.longitude);
+
         setCursor(user, color, cursorLatLng);
     }
 }
 
 function setCursor(user, fillColor, latlng) {
+    if (!fillColor.startsWith('#')) {
+        fillColor = '#' + fillColor;
+    }
     if (cursors[user]) {
         // Update the cursor position with interpolated animation
         let oldLatLng = cursors[user].getLatLng();
