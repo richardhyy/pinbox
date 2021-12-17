@@ -159,6 +159,26 @@ function updateBaseMap(id) {
     });
 }
 
+function setMapPublic(isPublic) {
+    showProcessingToast();
+    $.ajax({
+        url: updateMapInfoUrl,
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        data: {
+            'public': isPublic
+        },
+        success: function (data) {
+            showToast('Successfully updated map public status');
+        },
+        error: function (data) {
+            showErrorToastAjax(data, 'failed updating map public status');
+        }
+    });
+}
+
 function deleteMap(url) {
     $.ajax({
         url: url,
@@ -291,6 +311,10 @@ fetchMapDetail((data) => {
         $('.non-editing-area').hide();
     } else {
         $('.editing-area').hide();
+    }
+
+    if (data.owner === viewerUsername) {
+        $('#public-map-switch').prop('checked', data.public);
     }
 });
 

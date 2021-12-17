@@ -105,6 +105,16 @@
                                        onclick="updateCollaboratorList()">
                                     Collaborators
                                 </a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="public-map-switch">
+                                        <label class="form-check-label" for="public-map-switch">Public</label>
+                                    </div>
+                                </a></li>
                             </ul>
                         </div>
 
@@ -216,9 +226,10 @@
             <div class="d-flex justify-content-between p-2">
                 <div class="d-flex justify-content-start p-2">
                     <input id="collaborator-input" class="form-control form-control" type="text"
-                       placeholder="Add a collaborator"/>
+                           placeholder="Add a collaborator"/>
                     <button id="collaborator-add-btn" class="btn btn-outline-secondary ms-1" type="button"
-                            onclick="addCollaborator($('#collaborator-input').val())">Add</button>
+                            onclick="addCollaborator($('#collaborator-input').val())">Add
+                    </button>
                 </div>
                 <div>
                     <button type="button" class="btn btn-primary m-2" data-bs-dismiss="modal">Done</button>
@@ -280,6 +291,11 @@
     }, true);
 
     resizeToolboxes();
+
+    // Public map toggle events
+    $('#public-map-switch').change(function() {
+        setMapPublic(this.checked);
+    });
 
 </script>
 
