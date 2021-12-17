@@ -61,25 +61,19 @@
         {% endif %}
 
         const smallMarkerIcon = L.icon({
-            iconUrl: '{% static 'interface/images/marker-icon.png' %}',
-            iconRetinaUrl: '{% static 'interface/images/marker-icon-2x.png' %}',
-            shadowUrl: '{% static 'interface/images/marker-shadow-small.png' %}',
-            iconSize: [20, 33],
-            shadowSize: [33, 33],
-            iconAnchor: [10, 32],
-            shadowAnchor: [10, 32],
-            popupAnchor: [0, -37]
+            iconUrl: '{% static 'interface/images/point-editing.png' %}',
+            iconRetinaUrl: '{% static 'interface/images/point-editing-2x.png' %}',
+            iconSize: [25, 25],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -30]
         });
 
         const defaultMarkerIcon = L.icon({
-            iconUrl: '{% static 'interface/images/marker-icon-orange.png' %}',
-            iconRetinaUrl: '{% static 'interface/images/marker-icon-orange-2x.png' %}',
-            shadowUrl: '{% static 'interface/images/marker-shadow.png' %}',
-            iconSize: [25, 41],
-            shadowSize: [41, 41],
-            iconAnchor: [13, 40],
-            shadowAnchor: [13, 40],
-            popupAnchor: [0, -45]
+            iconUrl: '{% static 'interface/images/point.png' %}',
+            iconRetinaUrl: '{% static 'interface/images/point-2x.png' %}',
+            iconSize: [25, 25],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -30]
         });
 
         const markerBtnIcon = '{% static 'interface/images/marker.png' %}';

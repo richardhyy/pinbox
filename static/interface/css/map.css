@@ -14,6 +14,27 @@ html, body, #map-container {
     min-width: 100px;
 }
 
+.feature-label {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #212121;
+    text-shadow:
+        -1px -1px 0 #efefef,
+         0   -1px 0 #efefef,
+         1px -1px 0 #efefef,
+         1px  0   0 #efefef,
+         1px  1px 0 #efefef,
+         0    1px 0 #efefef,
+        -1px  1px 0 #efefef,
+        -1px  0   0 #efefef;
+    font-weight: bold;
+}
+
+.feature-label::before {
+    border: none;
+}
+
 .cursor-icon {
     background: none;
     border: none;

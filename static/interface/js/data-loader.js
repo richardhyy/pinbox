@@ -30,32 +30,38 @@ let userFeatureLayer = L.geoJSON(null, {
                         '
                         />
                     </div>
-                `);
-        layer.on('click', function (e) {
-            this.openPopup();
+                `).openPopup();
+        layer.bindTooltip(feature.properties.name, {
+            permanent: true,
+            direction: 'bottom',
+            offset: [0, 8],
+            className: 'feature-label',
         });
-        layer.on('contextmenu', function (e) {
-            let featureType = feature.geometry.type;
-            let deleteFunctionName = featureType === "Point" ? "deletePoint" : "deletePolyline";
-            deletePopup
-                .setContent(`
-                            <div class="marker-popup-container">
-                                <h5>Delete ${feature.properties.name}?</h5>
-                                <a class="btn btn-outline-secondary" id="delete-feature-${feature.properties.pk}"
-                                       onclick="
-                                               requireConfirm(
-                                               'delete-feature-${feature.properties.pk}',
-                                               () => {
-                                                   ${deleteFunctionName}(${feature.properties.pk});
-                                                   map.closePopup();
-                                               })"
-                                       data-bs-toggle="tooltip" data-bs-placement="bottom"
-                                       title="Can NOT be undone">
-                                        Delete</a>
-                            </div>`)
-                .setLatLng(e.latlng)
-                .openOn(map);
-        });
+        // layer.on('click', function (e) {
+        //     this.openPopup();
+        // });
+        // layer.on('contextmenu', function (e) {
+        //     let featureType = feature.geometry.type;
+        //     let deleteFunctionName = featureType === "Point" ? "deletePoint" : "deletePolyline";
+        //     deletePopup
+        //         .setContent(`
+        //                     <div class="marker-popup-container">
+        //                         <h5>Delete ${feature.properties.name}?</h5>
+        //                         <a class="btn btn-outline-secondary" id="delete-feature-${feature.properties.pk}"
+        //                                onclick="
+        //                                        requireConfirm(
+        //                                        'delete-feature-${feature.properties.pk}',
+        //                                        () => {
+        //                                            ${deleteFunctionName}(${feature.properties.pk});
+        //                                            map.closePopup();
+        //                                        })"
+        //                                data-bs-toggle="tooltip" data-bs-placement="bottom"
+        //                                title="Can NOT be undone">
+        //                                 Delete</a>
+        //                     </div>`)
+        //         .setLatLng(e.latlng)
+        //         .openOn(map);
+        // });
 
 
     },
