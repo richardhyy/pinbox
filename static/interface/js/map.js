@@ -382,7 +382,7 @@ function addSearchResultEntry(feature) {
                 </div>
                 <div class="feature-detail col-9">
                     <input id="feature-name-input-${feature.id}" class="form-control form-control-plaintext pb-1" value="${feature.name}" 
-                        onkeyup='${infoUpdateFunctionName}("${feature.id}", $(this).val())'
+                        onkeyup='${infoUpdateFunctionName}("${feature.id}", $(this).val())' placeholder="Unnamed"
                     />
                     <input id="feature-description-input-${feature.id}" class="form-control form-control-plaintext text-muted pt-0 pb-1" value="${feature.description ? feature.description : ''}"  
                         onkeyup='${infoUpdateFunctionName}("${feature.id}", undefined, $(this).val())' placeholder="No description"
