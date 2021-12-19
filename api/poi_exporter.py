@@ -1,6 +1,5 @@
 import shapefile
-from openpyxl import Workbook
-from api.models import Poi
+from api.models import Point, LineString, Polygon
 import datetime
 import os
 import uuid
@@ -10,100 +9,104 @@ CACHE_DIR = 'cache'
 EXPORT_CACHE_SUBDIR = 'poi_export'
 
 """
-POI model contains the following fields:
+Point model contains the following fields:
     name = models.TextField(max_length=100)
-    aliases = ArrayField(models.TextField(max_length=100), blank=True, null=True)
-    types = ArrayField(models.TextField(max_length=25), blank=True, null=True)
-    address = models.TextField(max_length=255)
-    city = models.TextField(max_length=25)
-    province = models.TextField(max_length=25)
-    tel = models.TextField(max_length=25, blank=True, null=True)
-    website = models.TextField(max_length=255, blank=True, null=True)
-    photos = models.ManyToManyField(PoiPhoto, blank=True)
-    additional_info = models.OneToOneField(PoiAdditionalInfo, on_delete=models.CASCADE, blank=True, null=True)
-    longitude = models.FloatField()
-    latitude = models.FloatField()
+    description = models.TextField(max_length=255, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
+    edit_session = models.ForeignKey(EditSession, on_delete=models.SET_NULL, blank=True, null=True)
+    geom = models.PointField(srid=4326)
+    
+LineString model contains the following fields:
+    name = models.TextField(max_length=100)
+    description = models.TextField(max_length=255, blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
+    edit_session = models.ForeignKey(EditSession, on_delete=models.SET_NULL, blank=True, null=True)
+    geom = models.LineStringField(srid=4326)
 """
 
 
-def export_poi_to_excel(poi_list):
+def _create_prj_file(shapefile_path):
     """
-    Export a list of POI to excel file
-    :param poi_list:
-    :return: excel file path
+    Create projection file for the given shapefile which defines the CRS as WGS84
+    :param shapefile_path: path to the shapefile
+    :return:
     """
-    wb = Workbook()
-    ws = wb.active
-
-    ws.append(['Name', 'Address', 'City', 'Province', 'Longitude', 'Latitude'])
-
-    for poi in poi_list:
-        ws.append([poi.name, poi.address, poi.city, poi.province, poi.longitude, poi.latitude])
-
-    output_folder = prepare_destination_folder()
-    output_file_name = generate_random_filename('xlsx')
-    output_path = os.path.join(output_folder, output_file_name)
-    wb.save(output_path)
-    return output_path
+    prj_file = open(shapefile_path + '.prj', 'w')
+    prj_file.write('GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG",'
+                   '"7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",'
+                   '0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]')
+    prj_file.close()
 
 
-def export_poi_to_shapefile(poi_list):
+def export_entities_to_shapefile(point_list, line_list, polygon_list):
     """
     Export a list of POI to shapefile
-    :param poi_list:
+    :param point_list:
+    :param line_list:
+    :param polygon_list:
     :return: shapefile file path
     """
     output_folder = prepare_destination_folder()
-    output_file_name = generate_random_filename(None)
-    output_shp_folder = os.path.join(output_folder, output_file_name) # The `shapefile' contains multiple files
+    output_shp_folder = os.path.join(output_folder, generate_random_filename(None)) # The `shapefile' contains multiple files
 
-    output_path = os.path.join(output_shp_folder, output_file_name)
+    if len(point_list) > 0:
+        # Create shapefile for points
+        w = shapefile.Writer(os.path.join(output_shp_folder, 'points'))
+        w.autoBalance = 1
+        w.field('name', 'C')
+        w.field('description', 'C')
+        w.field('created_by', 'C')
+        w.field('created_at', 'C')
+        for point in point_list:
+            w.point(point.geom.x, point.geom.y)
+            w.record(point.name, point.description, point.created_by.username, point.created_at.strftime('%Y-%m-%d %H:%M:%S'))
+        w.close()
+        # Create projection file
+        _create_prj_file(os.path.join(output_shp_folder, 'points'))
 
-    # Create shapefile
-    w = shapefile.Writer(output_path)
-    w.autoBalance = 1
-    w.field('Name', 'C')
-    w.field('Address', 'C')
-    w.field('City', 'C')
-    w.field('Province', 'C')
-    w.field('Longitude', 'N', decimal=10)
-    w.field('Latitude', 'N', decimal=10)
+    if len(line_list) > 0:
+        # Create shapefile for lines
+        w = shapefile.Writer(os.path.join(output_shp_folder, 'lines'))
+        w.autoBalance = 1
+        w.field('name', 'C')
+        w.field('description', 'C')
+        w.field('created_by', 'C')
+        w.field('created_at', 'C')
+        for line in line_list:
+            w.line([list(line.geom.coords)])
+            w.record(line.name, line.description, line.created_by.username, line.created_at.strftime('%Y-%m-%d %H:%M:%S'))
+        w.close()
+        # Create projection file
+        _create_prj_file(os.path.join(output_shp_folder, 'lines'))
 
-    for poi in poi_list:
-        w.point(poi.longitude, poi.latitude)
-        w.record(poi.name, poi.address, poi.city, poi.province, poi.longitude, poi.latitude)
+    if len(polygon_list) > 0:
+        # Create shapefile for polygons
+        w = shapefile.Writer(os.path.join(output_shp_folder, 'polygons'))
+        w.autoBalance = 1
+        w.field('name', 'C')
+        w.field('description', 'C')
+        w.field('created_by', 'C')
+        w.field('created_at', 'C')
+        for polygon in polygon_list:
+            w.poly([list(polygon.geom.exterior.coords)])
+            w.record(polygon.name, polygon.description, polygon.created_by.username, polygon.created_at.strftime('%Y-%m-%d %H:%M:%S'))
+        w.close()
+        # Create projection file
+        _create_prj_file(os.path.join(output_shp_folder, 'polygons'))
 
-    w.close()
 
     # Zip shapefile
     # A `shapefile' contains multiple parts, so we need to zip them
 
-    zip_file_path = os.path.join(output_folder, output_file_name + '.zip')
+    zip_file_path = os.path.join(output_folder, generate_random_filename('zip'))
     # Create zip file to archive the entire output_shp_folder
     with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
         for root, dirs, files in os.walk(output_shp_folder):
             for file in files:
                 zip_file.write(os.path.join(root, file), os.path.basename(file))
     return zip_file_path
-
-
-def export_poi_to_csv(poi_list):
-    """
-    Export a list of POI to csv file
-    :param poi_list:
-    :return: csv file path
-    """
-    output_folder = prepare_destination_folder()
-    output_file_name = generate_random_filename('csv')
-    output_path = os.path.join(output_folder, output_file_name)
-
-    with open(output_path, 'w') as f:
-        f.write('Name,Address,City,Province,Longitude,Latitude\n')
-        for poi in poi_list:
-            f.write(f'{csv_field_escape(poi.name)},{csv_field_escape(poi.address)},{csv_field_escape(poi.city)},{csv_field_escape(poi.province)},{poi.longitude},{poi.latitude}\n')
-
-    f.close()
-    return output_path
 
 
 # MARK: - Helper functions

@@ -13,6 +13,8 @@ urlpatterns = [
     path('map/update/<int:map_id>', views.update_map, name='update_map'),
     path('map/delete/<int:map_id>', views.delete_map, name='delete_map'),
     path('map/sharelink/<int:map_id>', views.get_map_share_link, name='map_share_link'),
+    path('map/export/<int:map_id>', views.export_features, name='export_features'),
+    path('map/export/download/<str:filename>', views.download_exported_pois, name='download_exported'),
 
     # Entity related
     path('entity/filter/<int:map_id>', views.filter_features, name='filter_features'),

@@ -22,6 +22,7 @@ from django.http import JsonResponse
 from django.forms.models import model_to_dict
 
 import api.models as models
+import api.poi_exporter as exporter
 
 
 # Map related APIs
@@ -501,6 +502,62 @@ def filter_features(request, map_id):
         'total': total,
         'geom': feature_to_geojson(features, True),
     }, status=200)
+
+
+def export_features(request, map_id):
+    """
+    Check authentication and export the feature list to shapefile(s)
+    :param request:
+    :param map_id:
+    :return:
+    """
+    try:
+        map = get_map_if_authenticated(request.user, map_id)
+    except AccessError as e:
+        return JsonResponse({'error': e.message}, status=e.status_code)
+
+    if not map.can_edit(request.user):
+        return JsonResponse({'error': 'You are not allowed to export features from this map'}, status=403)
+
+    # If keyword is provided, only export features that match the keyword
+    keyword = request.POST.get('keyword', None)
+    if keyword:
+        points = map.points.filter(name__icontains=keyword)
+        lines = map.polylines.filter(name__icontains=keyword)
+        polygons = map.polygons.filter(name__icontains=keyword)
+    else:
+        points = map.points.all()
+        lines = map.polylines.all()
+        polygons = map.polygons.all()
+
+    export_file_path = exporter.export_entities_to_shapefile(points, lines, polygons)
+
+    return JsonResponse({'url': reverse('api:download_exported', kwargs={'filename': os.path.basename(export_file_path)})}, status=200)
+
+
+def download_exported_pois(request, filename):
+    """
+    Download the exported shapefile
+    :param request:
+    :param filename:
+    :return:
+    """
+
+    # Check if the filename is valid
+    # it should only contain alphanumeric characters and numbers with file extension
+    split = filename.split('.')
+    if len(split) != 2 or not re.match(r'^[a-zA-Z0-9_]+$', split[0]):
+        return JsonResponse({'error': 'Invalid filename'}, status=400)
+
+    file_path = os.path.join(exporter.prepare_destination_folder(), filename)
+    if not os.path.exists(file_path):
+        return JsonResponse({'error': 'File not found'}, status=404)
+
+    exported_file = open(file_path, "rb")
+    response = FileResponse(exported_file)
+    response['Content-Disposition'] = 'attachment; filename={}'.format(os.path.basename(file_path))
+    return response
+
 
 
 # MARK: - Collaboration APIs
