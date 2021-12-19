@@ -22,9 +22,17 @@ class MapViewTests(TestCase):
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             max_zoom=19)
 
-    def _get_first_private_map_id(self):
-        response = self.client.get(reverse('api:get_private_maps'))
-        return response.json()['maps'][0]['id']
+    def _get_last_private_map_id(self):
+        map = models.Map.objects.filter(public=False).last()
+        return map.id
+
+    def _get_last_point_id(self):
+        point = models.Point.objects.filter(created_by=self.user).last()
+        return point.id
+
+    def _get_last_line_id(self):
+        line = models.LineString.objects.filter(created_by=self.user).last()
+        return line.id
 
     def test_create_map(self):
         url = reverse('api:create_map')
@@ -43,14 +51,10 @@ class MapViewTests(TestCase):
         self.client.post(reverse('api:create_map'), {'name': 'test_map_private', 'description': 'test_description'})
         self.client.post(reverse('api:create_map'), {'name': 'test_map_private', 'description': 'test_description'})
 
-        # Get private map list
-        response = self.client.get(reverse('api:get_private_maps'))
-        # Extract the second map ID and set it as public
-        map_id = response.json()['maps'][1]['id']
-        response = self.client.post(reverse('api:update_map', kwargs={'map_id': map_id}),
+        response = self.client.post(reverse('api:update_map', kwargs={'map_id': self._get_last_private_map_id()}),
                                     {
                                         'name': 'test_map_public',
-                                        'public': True
+                                        'public': 'true'
                                     })
         self.assertEqual(response.status_code, 200)
 
@@ -62,21 +66,21 @@ class MapViewTests(TestCase):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
         # Get map details
-        response = self.client.get(reverse('api:get_map_detail', kwargs={'map_id': self._get_first_private_map_id()}))
+        response = self.client.get(reverse('api:get_map_detail', kwargs={'map_id': self._get_last_private_map_id()}))
         self.assertContains(response, 'test_map', status_code=200)
 
     def test_update_map(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
         # Update map
-        response = self.client.post(reverse('api:update_map', kwargs={'map_id': self._get_first_private_map_id()}),
+        response = self.client.post(reverse('api:update_map', kwargs={'map_id': self._get_last_private_map_id()}),
                                     {
                                         'name': 'test_map_updated',
                                         'description': 'test_description_updated',
                                         'public': True,
                                         'base_map': self.base_map.id
                                     })
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Get map details
         response = self.client.get(reverse('api:get_map_detail', kwargs={'map_id': map_id}))
         self.assertContains(response, 'test_map_updated', status_code=200)
@@ -86,7 +90,7 @@ class MapViewTests(TestCase):
     def test_delete_map(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Delete map
         response = self.client.post(reverse('api:delete_map', kwargs={'map_id': map_id}))
         self.assertEqual(response.status_code, 200)
@@ -97,7 +101,7 @@ class MapViewTests(TestCase):
     def test_create_point(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create point
         response = self.client.post(reverse('api:create_point', kwargs={'map_id': map_id}),
                                     {
@@ -107,13 +111,13 @@ class MapViewTests(TestCase):
                                     })
         self.assertContains(response, '123.456', status_code=200)
         # Get points
-        response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
-        self.assertContains(response, '67.89', status_code=200)
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
+        self.assertContains(response, 'test_point', status_code=200)
 
     def test_update_point(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create point
         self.client.post(reverse('api:create_point', kwargs={'map_id': map_id}),
                                     {
@@ -144,7 +148,7 @@ class MapViewTests(TestCase):
     def test_delete_point(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create point
         self.client.post(reverse('api:create_point', kwargs={'map_id': map_id}),
                                     {
@@ -153,16 +157,16 @@ class MapViewTests(TestCase):
                                         'latitude': 67.89,
                                     })
         # Delete point
-        response = self.client.post(reverse('api:delete_point', kwargs={'map_id': map_id, 'point_id': 1}))
+        response = self.client.post(reverse('api:delete_point', kwargs={'map_id': map_id, 'point_id': self._get_last_point_id()}))
         self.assertEqual(response.status_code, 200)
         # Get points
-        response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
         self.assertNotContains(response, '67.89', status_code=200)
 
     def test_create_line(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create line
         response = self.client.post(reverse('api:create_line', kwargs={'map_id': map_id}),
                                     {
@@ -171,12 +175,13 @@ class MapViewTests(TestCase):
                                     })
         self.assertContains(response, '1.0, 1.0', status_code=200)
         # Get lines
-        response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
+        self.assertContains(response, 'test_line', status_code=200)
 
     def test_update_line(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create line
         self.client.post(reverse('api:create_line', kwargs={'map_id': map_id}),
                                     {
@@ -205,18 +210,18 @@ class MapViewTests(TestCase):
     def test_delete_line(self):
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create line
-        self.client.post(reverse('api:create_line', kwargs={'map_id': map_id}),
+        response = self.client.post(reverse('api:create_line', kwargs={'map_id': map_id}),
                                     {
                                         'name': 'test_line',
                                         'linestring': 'LINESTRING(1 1, 2 2, 3 3)'
                                     })
         # Delete line
-        response = self.client.post(reverse('api:delete_line', kwargs={'map_id': map_id, 'line_id': 1}))
+        response = self.client.post(reverse('api:delete_line', kwargs={'map_id': map_id, 'line_id': self._get_last_line_id()}))
         self.assertEqual(response.status_code, 200)
         # Get lines
-        response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
         self.assertNotContains(response, '2.0, 2.0', status_code=200)
 
     def test_collaborating(self):
@@ -227,7 +232,7 @@ class MapViewTests(TestCase):
 
         # Create map
         self.client.post(reverse('api:create_map'), {'name': 'test_map', 'description': 'test_description'})
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
         # Create point
         self.client.post(reverse('api:create_point', kwargs={'map_id': map_id}),
                                     {
@@ -338,12 +343,12 @@ class MapViewTests(TestCase):
                                         'name': 'test_map',
                                         'description': 'test_description'
                                     })
-        map_id = self._get_first_private_map_id()
+        map_id = self._get_last_private_map_id()
 
         # Share map
         response = self.client.post(reverse('api:update_map', kwargs={'map_id': map_id}),
                                     {
-                                        'public': True
+                                        'public': 'true'
                                     })
         self.assertEqual(response.status_code, 200)
         # Get map detail
@@ -358,9 +363,7 @@ class MapViewTests(TestCase):
         response = self.client.get(reverse('api:get_map_detail', kwargs={'map_id': map_id}))
         self.assertEqual(response.status_code, 200)
         # Get features
-        response = self.client.get(reverse('api:filter_points', kwargs={'map_id': map_id}))
-        self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('api:filter_lines', kwargs={'map_id': map_id}))
+        response = self.client.get(reverse('api:filter_features', kwargs={'map_id': map_id}))
         self.assertEqual(response.status_code, 200)
         # Test delete feature
         response = self.client.get(reverse('api:delete_point', kwargs={'map_id': map_id, 'point_id': 1}))
