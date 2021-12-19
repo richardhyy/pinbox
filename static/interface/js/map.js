@@ -198,7 +198,7 @@ function deleteMap(url) {
     });
 }
 
-function exportPois(url, type) {
+function exportFeatures(url, type) {
     showProcessingToast(500);
     let keyword = $('#search-input').val();
     $.ajax({
@@ -212,12 +212,12 @@ function exportPois(url, type) {
                 keyword: keyword
             },
             success: function (data) {
-                showToast('POIs exported');
+                showToast('features exported');
                 // open a new window with the file url
                 window.open(data.url);
             },
             error: function (data) {
-                showErrorToastAjax(data, 'failed exporting POIs');
+                showErrorToastAjax(data, 'failed exporting features');
             }
         }
     );

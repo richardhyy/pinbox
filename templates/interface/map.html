@@ -127,7 +127,7 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="export-options">
                                 <li><a class="dropdown-item"
-                                       onclick="exportPois('### TODO ###', 'shp')">ESRI
+                                       onclick="exportFeatures('{% url 'api:export_features' map_id %}', 'shp')">ESRI
                                     Shapefile (.shp)</a></li>
                             </ul>
                         </div>
