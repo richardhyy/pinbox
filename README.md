@@ -1,7 +1,7 @@
 # PinBox
 **Collaborating on maps.**
 
-Edit the map and share it with others.
+Edit maps & share with others.
 
 ## Features
 * **Collaborating on maps.**
