@@ -8,6 +8,7 @@
     {% block cssHead %}
     {% endblock %}
 
+    <script src="{% static 'libs/jquery/jquery.min.js' %}"></script>
     {% block scriptHead %}
     {% endblock %}
     <title>{% block title %}title{% endblock %}</title>
@@ -100,6 +101,7 @@
 </div>
 
 <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.js' %}"></script>
+<script src="{% static 'libs/bootstrap/js/bootstrap.js' %}"></script>
 {% block scriptBody %}
 {% endblock %}
 </body>
