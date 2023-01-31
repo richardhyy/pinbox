@@ -127,8 +127,14 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="export-options">
                                 <li><a class="dropdown-item"
-                                       onclick="exportFeatures('{% url 'api:export_features' map_id %}', 'shp')">ESRI
+                                       onclick="exportFeatures('{% url "api:export_features" map_id %}', 'shp')">ESRI
                                     Shapefile (.shp)</a></li>
+                                <li><a class="dropdown-item"
+                                       onclick="exportFeatures('{% url "api:export_features" map_id %}', 'csv')">Comma-separated
+                                    values (.csv) (Points only)</a></li>
+                                <li><a class="dropdown-item"
+                                       onclick="exportFeatures('{% url "api:export_features" map_id %}', 'xlsx')">Microsoft
+                                    Excel (.xlsx) (Points only)</a></li>
                             </ul>
                         </div>
 

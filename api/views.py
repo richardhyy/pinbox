@@ -506,7 +506,7 @@ def filter_features(request, map_id):
 
 def export_features(request, map_id):
     """
-    Check authentication and export the feature list to shapefile(s)
+    Check authentication and export the POI list to a file type specified
     :param request:
     :param map_id:
     :return:
@@ -515,6 +515,13 @@ def export_features(request, map_id):
         map = get_map_if_authenticated(request.user, map_id)
     except AccessError as e:
         return JsonResponse({'error': e.message}, status=e.status_code)
+
+    available_types = ['csv', 'shp', 'xlsx']
+    file_type = request.POST.get('type', None)
+    if not file_type:
+        return JsonResponse({'error': 'File type is required'}, status=400)
+    if file_type not in available_types:
+        return JsonResponse({'error': 'File type not supported'}, status=400)
 
     if not map.can_edit(request.user):
         return JsonResponse({'error': 'You are not allowed to export features from this map'}, status=403)
@@ -530,7 +537,13 @@ def export_features(request, map_id):
         lines = map.polylines.all()
         polygons = map.polygons.all()
 
-    export_file_path = exporter.export_entities_to_shapefile(points, lines, polygons)
+    export_file_path = None
+    if file_type == 'csv':
+        export_file_path = exporter.export_points_to_csv(points)
+    elif file_type == 'shp':
+        export_file_path = exporter.export_entities_to_shapefile(points, lines, polygons)
+    elif file_type == 'xlsx':
+        export_file_path = exporter.export_points_to_excel(points)
 
     return JsonResponse({'url': reverse('api:download_exported', kwargs={'filename': os.path.basename(export_file_path)})}, status=200)
 

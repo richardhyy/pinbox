@@ -1,4 +1,5 @@
 import shapefile
+from openpyxl import Workbook
 from api.models import Point, LineString, Polygon
 import datetime
 import os
@@ -145,3 +146,45 @@ def csv_field_escape(field):
         if ',' in field:
             field = '"' + field + '"'
     return field
+
+
+def export_points_to_excel(poi_list: [Point]):
+    """
+    Export a list of POI to excel file
+    :param poi_list:
+    :return: excel file path
+    """
+    wb = Workbook()
+    ws = wb.active
+
+    ws.append(['Name', 'Description', 'CreatedBy', 'CreatedAt', 'Longitude', 'Latitude'])
+
+    for poi in poi_list:
+        lat = poi.geom.y
+        lon = poi.geom.x
+        time_str = poi.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ws.append([poi.name, poi.description, poi.created_by.username, time_str, lon, lat])
+
+    output_folder = prepare_destination_folder()
+    output_file_name = generate_random_filename('xlsx')
+    output_path = os.path.join(output_folder, output_file_name)
+    wb.save(output_path)
+    return output_path
+
+def export_points_to_csv(poi_list):
+    """
+    Export a list of POI to csv file
+    :param poi_list:
+    :return: csv file path
+    """
+    output_folder = prepare_destination_folder()
+    output_file_name = generate_random_filename('csv')
+    output_path = os.path.join(output_folder, output_file_name)
+
+    with open(output_path, 'w') as f:
+        f.write('Name,Description,CreatedBy,CreatedAt,Longitude,Latitude')
+        for poi in poi_list:
+            f.write(f'{csv_field_escape(poi.name)},{csv_field_escape(poi.description)},{csv_field_escape(poi.created_by.username)},{poi.created_at},{poi.geom.x},{poi.geom.y}')
+
+    f.close()
+    return output_path
