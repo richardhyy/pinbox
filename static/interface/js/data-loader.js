@@ -46,6 +46,8 @@ let map = L.map("map", {
         baseMapLayer
     ],
     zoomControl: false,
+    zoomSnap: 0,
+    wheelDebounceTime: 0,
 });
 
 L.control.zoom({
